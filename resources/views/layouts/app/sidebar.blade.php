@@ -1,101 +1,106 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:sidebar.collapse class="lg:hidden" />
-            </flux:sidebar.header>
+    <body class="bg-body-tertiary d-flex flex-column min-vh-100">
+        <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('dashboard') }}" wire:navigate>
+                    <x-app-logo />
+                </a>
 
-            <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
-            </flux:sidebar.nav>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu"
+                        aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigasi">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-            <flux:spacer />
+                <div class="collapse navbar-collapse" id="sidebarMenu">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                               href="{{ route('dashboard') }}" wire:navigate>{{ __('Dashboard') }}</a>
+                        </li>
+                        @role('pengguna')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('dashboard') }}" wire:navigate>{{ __('Sewa Fasilitas') }}</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('dashboard') }}" wire:navigate>{{ __('Peminjaman Saya') }}</a>
+                            </li>
+                        @endrole
+                        @hasrole('pengelola')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('dashboard') }}" wire:navigate>{{ __('Fasilitas') }}</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('dashboard') }}" wire:navigate>{{ __('Jadwal') }}</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('dashboard') }}" wire:navigate>{{ __('Verifikasi') }}</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('dashboard') }}" wire:navigate>{{ __('Transaksi') }}</a>
+                            </li>
+                        @endhasrole
+                        @role('admin')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('dashboard') }}" wire:navigate>{{ __('Pengguna') }}</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('dashboard') }}" wire:navigate>{{ __('Laporan') }}</a>
+                            </li>
+                        @endrole
+                    </ul>
 
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false" data-test="sidebar-menu-button">
+                            {{ auth()->user()->name }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">{{ auth()->user()->email }}</h6></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile.edit') }}" wire:navigate>
+                                    {{ __('Pengaturan') }}
+                                </a>
+                            </li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item" data-test="logout-button">
+                                        {{ __('Keluar') }}
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
 
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
+        <main class="container py-4 flex-grow-1">
+            {{ $slot }}
+        </main>
 
-            <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
-        </flux:sidebar>
+        <footer class="border-top py-3 bg-white">
+            <div class="container text-center text-secondary small">
+                &copy; {{ date('Y') }} {{ config('app.name') }} — DISDIKPORA Badung
+            </div>
+        </footer>
 
-        <!-- Mobile User Menu -->
-        <flux:header class="lg:hidden">
-            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            @foreach (session('laravel_flash_message', []) as $message)
+                <div class="toast align-items-center text-bg-success border-0 show" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">{{ $message }}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Tutup"></button>
+                    </div>
+                </div>
+            @endforeach
+        </div>
 
-            <flux:spacer />
-
-            <flux:dropdown position="top" align="end">
-                <flux:profile
-                    :initials="auth()->user()->initials()"
-                    icon-trailing="chevron-down"
-                />
-
-                <flux:menu>
-                    <flux:menu.radio.group>
-                        <div class="p-0 text-sm font-normal">
-                            <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <flux:avatar
-                                    :name="auth()->user()->name"
-                                    :initials="auth()->user()->initials()"
-                                />
-
-                                <div class="grid flex-1 text-start text-sm leading-tight">
-                                    <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
-                                    <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
-                                </div>
-                            </div>
-                        </div>
-                    </flux:menu.radio.group>
-
-                    <flux:menu.separator />
-
-                    <flux:menu.radio.group>
-                        <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
-                            {{ __('Settings') }}
-                        </flux:menu.item>
-                    </flux:menu.radio.group>
-
-                    <flux:menu.separator />
-
-                    <form method="POST" action="{{ route('logout') }}" class="w-full">
-                        @csrf
-                        <flux:menu.item
-                            as="button"
-                            type="submit"
-                            icon="arrow-right-start-on-rectangle"
-                            class="w-full cursor-pointer"
-                            data-test="logout-button"
-                        >
-                            {{ __('Log out') }}
-                        </flux:menu.item>
-                    </form>
-                </flux:menu>
-            </flux:dropdown>
-        </flux:header>
-
-        {{ $slot }}
-
-        @persist('toast')
-            <flux:toast.group>
-                <flux:toast />
-            </flux:toast.group>
-        @endpersist
-
-        @fluxScripts
+        @stack('scripts')
     </body>
 </html>

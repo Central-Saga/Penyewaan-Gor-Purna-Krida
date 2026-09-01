@@ -1,30 +1,29 @@
 <?php
 
 use App\Concerns\ProfileValidationRules;
-use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Profile settings')] class extends Component {
+new #[Title('Pengaturan profil')] class extends Component {
     use ProfileValidationRules;
 
     public string $name = '';
     public string $email = '';
+    public string $no_hp = '';
 
     /**
-     * Mount the component.
+     * Mount component.
      */
     public function mount(): void
     {
         $this->name = Auth::user()->name;
         $this->email = Auth::user()->email;
+        $this->no_hp = Auth::user()->no_hp ?? '';
     }
 
     /**
-     * Update the profile information for the currently authenticated user.
+     * Update profile information for currently authenticated user.
      */
     public function updateProfileInformation(): void
     {
@@ -40,35 +39,49 @@ new #[Title('Profile settings')] class extends Component {
 
         $user->save();
 
-        Flux::toast(variant: 'success', text: __('Profile updated.'));
-    }
+        $this->dispatch('profile-updated');
 
+        session()->flash('status', __('Profil berhasil diperbarui.'));
+    }
 }; ?>
 
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading level="2" class="sr-only">{{ __('Profile settings') }}</flux:heading>
-
-    <x-pages::settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
-        <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
-            <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
+    <x-pages::settings.layout :heading="__('Profil')" :subheading="__('Perbarui nama, email, dan nomor HP Anda')">
+        <form wire:submit="updateProfileInformation" class="d-grid gap-3">
+            <div>
+                <label for="name" class="form-label">{{ __('Nama lengkap') }}</label>
+                <input id="name" type="text" class="form-control @error('name') is-invalid @enderror"
+                       wire:model="name" required autofocus autocomplete="name">
+                @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
 
             <div>
-                <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
-
+                <label for="email" class="form-label">{{ __('Alamat email') }}</label>
+                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror"
+                       wire:model="email" required autocomplete="email">
+                @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="flex items-center justify-end">
-                    <flux:button variant="primary" type="submit" class="w-full" data-test="update-profile-button">
-                        {{ __('Save') }}
-                    </flux:button>
-                </div>
+            <div>
+                <label for="no_hp" class="form-label">{{ __('Nomor HP (WhatsApp)') }}</label>
+                <input id="no_hp" type="tel" class="form-control @error('no_hp') is-invalid @enderror"
+                       wire:model="no_hp" autocomplete="tel" placeholder="0812xxxxxxx">
+                @error('no_hp')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
 
+            <div class="d-flex align-items-center gap-3">
+                <button type="submit" class="btn btn-primary" data-test="update-profile-button">
+                    {{ __('Perbarui') }}
+                </button>
+
+                @if (session('status') === __('Profil berhasil diperbarui.'))
+                    <span class="text-success small">{{ __('Tersimpan.') }}</span>
+                @endif
             </div>
         </form>
-
-            <livewire:pages::settings.delete-user-form />
     </x-pages::settings.layout>
+
+    <livewire:pages::settings.delete-user-form />
 </section>

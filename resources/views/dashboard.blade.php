@@ -1,18 +1,34 @@
 <x-layouts::app :title="__('Dashboard')">
-    <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-            </div>
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-            </div>
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
+    <h1 class="h4 fw-bold mb-4">{{ __('Dashboard') }}</h1>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-secondary mb-2">{{ __('Fasilitas') }}</h6>
+                    <p class="display-6 fw-bold mb-0">—</p>
+                </div>
             </div>
         </div>
-        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-secondary mb-2">{{ __('Peminjaman Saya') }}</h6>
+                    <p class="display-6 fw-bold mb-0">—</p>
+                </div>
+            </div>
         </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-secondary mb-2">{{ __('Jadwal Hari Ini') }}</h6>
+                    <p class="display-6 fw-bold mb-0">—</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-light border mt-4">
+        {{ __('Dashboard per role akan terisi pada langkah implementasi berikutnya.') }}
     </div>
 </x-layouts::app>

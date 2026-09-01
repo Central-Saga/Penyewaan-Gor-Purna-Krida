@@ -1,31 +1,17 @@
 <?php
 
 use App\Concerns\PasswordValidationRules;
-use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
-use Laravel\Fortify\Features;
-use Laravel\Fortify\Fortify;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Security settings')] class extends Component {
+new #[Title('Pengaturan keamanan')] class extends Component {
     use PasswordValidationRules;
 
     public string $current_password = '';
     public string $password = '';
     public string $password_confirmation = '';
-
-
-
-    /**
-     * Mount the component.
-     */
-    public function mount(DisableTwoFactorAuthentication $disableTwoFactorAuthentication): void
-    {
-
-    }
 
     /**
      * Update the password for the currently authenticated user.
@@ -49,54 +35,45 @@ new #[Title('Security settings')] class extends Component {
 
         $this->reset('current_password', 'password', 'password_confirmation');
 
-        Flux::toast(variant: 'success', text: __('Password updated.'));
+        session()->flash('status', __('Kata sandi berhasil diperbarui.'));
     }
-
-
 }; ?>
 
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading level="2" class="sr-only">{{ __('Security settings') }}</flux:heading>
+    <x-pages::settings.layout :heading="__('Perbarui kata sandi')" :subheading="__('Pastikan akun menggunakan kata sandi panjang dan acak agar tetap aman')">
+        <form wire:submit="updatePassword" class="d-grid gap-3">
+            <div>
+                <label for="current_password" class="form-label">{{ __('Kata sandi saat ini') }}</label>
+                <input id="current_password" type="password" class="form-control @error('current_password') is-invalid @enderror"
+                       wire:model="current_password" required autocomplete="current-password">
+                @error('current_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
 
-    <x-pages::settings.layout :heading="__('Update password')" :subheading="__('Ensure your account is using a long, random password to stay secure')">
-        <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
-            <flux:input
-                wire:model="current_password"
-                :label="__('Current password')"
-                type="password"
-                required
-                autocomplete="current-password"
-                viewable
-            />
-            <flux:input
-                wire:model="password"
-                :label="__('New password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable
-            />
-            <flux:input
-                wire:model="password_confirmation"
-                :label="__('Confirm password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable
-            />
+            <div>
+                <label for="password" class="form-label">{{ __('Kata sandi baru') }}</label>
+                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror"
+                       wire:model="password" required autocomplete="new-password">
+                @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
 
-            <div class="flex items-center gap-4">
-                <flux:button variant="primary" type="submit" data-test="update-password-button">
-                    {{ __('Save') }}
-                </flux:button>
+            <div>
+                <label for="password_confirmation" class="form-label">{{ __('Konfirmasi kata sandi baru') }}</label>
+                <input id="password_confirmation" type="password" class="form-control @error('password_confirmation') is-invalid @enderror"
+                       wire:model="password_confirmation" required autocomplete="new-password">
+                @error('password_confirmation')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <button type="submit" class="btn btn-primary" data-test="update-password-button">
+                    {{ __('Perbarui') }}
+                </button>
+
+                @if (session('status') === __('Kata sandi berhasil diperbarui.'))
+                    <span class="text-success small">{{ __('Tersimpan.') }}</span>
+                @endif
             </div>
         </form>
-
-
     </x-pages::settings.layout>
-
 </section>
