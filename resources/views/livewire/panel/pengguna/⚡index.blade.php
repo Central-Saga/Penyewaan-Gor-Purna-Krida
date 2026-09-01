@@ -78,7 +78,7 @@ new #[Title('Kelola Pengguna')] class extends Component
 
     public function render()
     {
-        return view('livewire::panel.pengguna.index', [
+        return $this->view([
             'daftarPengguna' => User::query()
                 ->when($this->cari, fn ($q) => $q->where(function ($q) {
                     $q->where('name', 'like', "%{$this->cari}%")

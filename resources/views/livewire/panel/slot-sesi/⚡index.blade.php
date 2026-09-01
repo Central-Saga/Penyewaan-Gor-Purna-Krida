@@ -82,7 +82,7 @@ new #[Title('Slot Sesi')] class extends Component
 
     public function render()
     {
-        return view('livewire::panel.slot-sesi.index', [
+        return $this->view([
             'daftarFasilitas' => Fasilitas::orderBy('nama')->get(),
             'daftarSlot' => SlotSesi::query()
                 ->when($this->fasilitasId > 0, fn ($q) => $q->where('fasilitas_id', $this->fasilitasId))

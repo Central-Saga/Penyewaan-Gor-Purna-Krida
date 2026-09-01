@@ -80,7 +80,7 @@ new #[Title('Form Fasilitas')] class extends Component
 
     public function render()
     {
-        return view('livewire::panel.fasilitas.form')
+        return $this->view()
             ->layout('layouts.app');
     }
 }; ?>

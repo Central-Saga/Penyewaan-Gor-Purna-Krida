@@ -10,6 +10,13 @@ Route::get('/', fn () => view('welcome', [
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
 
+    // Pengguna: jadwal + peminjaman.
+    Route::middleware('role:pengguna')->group(function () {
+        Route::livewire('jadwal', 'jadwal.index')->name('jadwal.index');
+        Route::livewire('peminjaman/baru', 'peminjaman.create')->name('peminjaman.create');
+        Route::livewire('peminjaman', 'peminjaman.index')->name('peminjaman.index');
+    });
+
     // Panel pengelola/admin: fasilitas, slot, blokir.
     Route::middleware('role:admin,pengelola')->prefix('panel')->group(function () {
         Route::livewire('fasilitas', 'panel.fasilitas.index')->name('panel.fasilitas.index');

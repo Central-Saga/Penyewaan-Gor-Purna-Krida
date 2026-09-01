@@ -58,7 +58,7 @@ new #[Title('Blokir Slot')] class extends Component
 
     public function render()
     {
-        return view('livewire::panel.blokir-slot.index', [
+        return $this->view([
             'daftarFasilitas' => Fasilitas::orderBy('nama')->get(),
             'daftarSlot' => $this->fasilitasId > 0
                 ? SlotSesi::where('fasilitas_id', $this->fasilitasId)->orderBy('jam_mulai')->get()

@@ -56,9 +56,8 @@ new #[Title('Fasilitas')] class extends Component
             ->orderBy('nama')
             ->paginate(10);
 
-        return view('livewire::panel.fasilitas.index', [
-            'daftarFasilitas' => $fasilitas,
-        ])->layout('layouts.app');
+        return $this->view(['daftarFasilitas' => $fasilitas])
+            ->layout('layouts.app');
     }
 }; ?>
 
