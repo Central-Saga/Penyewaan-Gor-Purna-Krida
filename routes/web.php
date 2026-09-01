@@ -2,7 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => view('welcome', ['fasilitas' => collect()]))->name('home');
+Route::get('/', fn () => view('welcome', [
+    'fasilitas' => \App\Models\Fasilitas::aktif()->orderBy('nama')->get(),
+]))->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
