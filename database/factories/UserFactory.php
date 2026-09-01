@@ -27,6 +27,7 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'no_hp' => fake()->phoneNumber(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -44,7 +45,32 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the model has two-factor authentication configured.
+     * Pengguna dengan role pengelola.
      */
-    public function withTwoFactor(): static {}
+    public function pengelola(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $user->assignRole('pengelola');
+        });
+    }
+
+    /**
+     * Pengguna dengan role admin.
+     */
+    public function admin(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $user->assignRole('admin');
+        });
+    }
+
+    /**
+     * Pengguna dengan role pengguna (default).
+     */
+    public function pengguna(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $user->assignRole('pengguna');
+        });
+    }
 }
