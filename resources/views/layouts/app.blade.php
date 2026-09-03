@@ -1,3 +1,3 @@
-<main class="container py-4">
+<x-layouts::app.sidebar :title="$title ?? null">
     {{ $slot }}
-</main>
+</x-layouts::app.sidebar>

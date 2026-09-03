@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
@@ -16,6 +17,7 @@ test('new users can register', function () {
     $response = $this->post(route('register.store'), [
         'name' => 'John Doe',
         'email' => 'test@example.com',
+        'no_hp' => '081234567890',
         'password' => 'password',
         'password_confirmation' => 'password',
     ]);
@@ -24,4 +26,8 @@ test('new users can register', function () {
         ->assertRedirect(route('dashboard', absolute: false));
 
     $this->assertAuthenticated();
+
+    $user = User::where('email', 'test@example.com')->first();
+    expect($user)->not->toBeNull();
+    expect($user->no_hp)->toBe('081234567890');
 });

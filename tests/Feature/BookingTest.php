@@ -106,7 +106,6 @@ test('test_booking_dibatalkan_melepas_slot', function () {
         'tanggal' => $tanggal,
     ]);
 
-
     expect($kedua->id)->not->toBe($peminjaman->id);
 });
 

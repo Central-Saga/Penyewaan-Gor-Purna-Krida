@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureRole
@@ -12,7 +11,7 @@ class EnsureRole
     /**
      * Pastikan pengguna yang terautentikasi memiliki salah satu role.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      * @param  list<string>  $roles
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response

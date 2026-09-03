@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Log perubahan status peminjaman — append-only, tanpa updated_at.
@@ -41,7 +40,7 @@ class PeminjamanLog extends Model
         string $ke,
         ?string $catatan,
         ?User $aktor,
-        string $aktorPeran = 'sistem',
+        string $aktorPeran = 'cron',
     ): self {
         return static::query()->create([
             'peminjaman_id' => $peminjaman->id,

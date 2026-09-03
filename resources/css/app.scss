@@ -7,7 +7,11 @@
     --gor-danger: #dc3545;
     --gor-info: #0dcaf0;
     --gor-bg: #f8f9fa;
-    --gor-dark: #212529;
+    --gor-dark: #0f172a;
+    --gor-sidebar-bg: #0f172a;
+    --gor-sidebar-hover: rgba(255, 255, 255, 0.08);
+    --gor-sidebar-active: #0d6efd;
+    --gor-sidebar-width: 260px;
 }
 
 @import '../../node_modules/bootstrap/scss/functions';
@@ -23,8 +27,8 @@ $success: #198754;
 $warning: #ffc107;
 $danger: #dc3545;
 $info: #0dcaf0;
-$body-bg: #f8f9fa;
-$dark: #212529;
+$body-bg: #f8fafc;
+$dark: #0f172a;
 
 @import '../../node_modules/bootstrap/scss/root';
 @import '../../node_modules/bootstrap/scss/reboot';
@@ -55,3 +59,319 @@ $dark: #212529;
 @import '../../node_modules/bootstrap/scss/popover';
 @import '../../node_modules/bootstrap/scss/utilities';
 @import '../../node_modules/bootstrap/scss/utilities/api';
+
+/* ==========================================================================
+   Modern App & Panel Layout - GOR Purnakrida
+   ========================================================================== */
+
+html {
+    scroll-behavior: smooth;
+}
+
+.backdrop-blur {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Sidebar & App Shell */
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+.app-sidebar {
+    width: var(--gor-sidebar-width);
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    transition: transform 0.3s ease;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.app-sidebar-brand {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.app-sidebar-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0.75rem;
+}
+
+.app-sidebar-section {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    padding: 0.75rem 0.75rem 0.35rem 0.75rem;
+}
+
+.app-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 0.5rem;
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-bottom: 0.2rem;
+
+    i {
+        font-size: 1.15rem;
+        color: #94a3b8;
+        transition: color 0.2s ease;
+    }
+
+    &:hover {
+        color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.08);
+
+        i {
+            color: #38bdf8;
+        }
+    }
+
+    &.active {
+        color: #ffffff;
+        background-color: #0d6efd;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.35);
+
+        i {
+            color: #ffffff;
+        }
+    }
+}
+
+.app-sidebar-footer {
+    padding: 1rem 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.app-main {
+    flex: 1;
+    margin-left: var(--gor-sidebar-width);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+.app-topbar {
+    height: 64px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+}
+
+.app-content {
+    flex: 1;
+    padding: 1.75rem;
+}
+
+.app-footer {
+    padding: 1rem 1.75rem;
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.825rem;
+    color: #64748b;
+}
+
+/* Stat Cards & Dashboard components */
+.stat-card-modern {
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    padding: 1.5rem;
+    transition: all 0.25s ease;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+}
+
+/* Mobile responsive sidebar */
+@media (max-width: 991.98px) {
+    .app-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .app-sidebar.show {
+        transform: translateX(0);
+    }
+
+    .app-main {
+        margin-left: 0;
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 1030;
+    }
+}
+
+/* ==========================================================================
+   Modern Landing Page Styles - GOR Purnakrida
+   ========================================================================== */
+
+.landing-hero {
+    position: relative;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.88) 0%, rgba(15, 23, 42, 0.96) 100%),
+                url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
+    padding-top: 5rem;
+    padding-bottom: 5.5rem;
+}
+
+.hero-preview-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: transform 0.3s ease;
+
+    &:hover {
+        transform: translateY(-4px);
+    }
+}
+
+.stat-chip {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    color: #e2e8f0;
+}
+
+.facility-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 32px -8px rgba(13, 110, 253, 0.15), 0 6px 12px -4px rgba(0, 0, 0, 0.04) !important;
+
+        .facility-img {
+            transform: scale(1.06);
+        }
+    }
+
+    .facility-img-wrapper {
+        height: 210px;
+        overflow: hidden;
+        background-color: #f1f5f9;
+    }
+
+    .facility-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.45s ease;
+    }
+}
+
+.step-card {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 1.25rem;
+    padding: 2rem;
+    height: 100%;
+    transition: all 0.25s ease;
+
+    &:hover {
+        border-color: #0d6efd;
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px -6px rgba(13, 110, 253, 0.12);
+    }
+
+    .step-number {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.15rem;
+    }
+}
+
+.feature-box {
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+    height: 100%;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.06);
+    }
+
+    .feature-icon-wrapper {
+        width: 54px;
+        height: 54px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+}
+
+.contact-info-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1.25rem;
+    padding: 2rem;
+    height: 100%;
+}

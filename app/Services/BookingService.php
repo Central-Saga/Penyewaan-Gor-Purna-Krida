@@ -58,7 +58,7 @@ class BookingService
 
             $bentrok = Peminjaman::query()
                 ->where('fasilitas_id', $data['fasilitas_id'])
-                ->where('tanggal', $data['tanggal'])
+                ->whereDate('tanggal', $data['tanggal'])
                 ->where('slot_sesi_id', $data['slot_sesi_id'])
                 ->whereIn('status', Peminjaman::STATUS_AKTIF)
                 ->lockForUpdate()
@@ -73,7 +73,7 @@ class BookingService
             $diblokir = BlokirSlot::query()
                 ->where('fasilitas_id', $data['fasilitas_id'])
                 ->where('slot_sesi_id', $data['slot_sesi_id'])
-                ->where('tanggal', $data['tanggal'])
+                ->whereDate('tanggal', $data['tanggal'])
                 ->exists();
 
             if ($diblokir) {
@@ -107,9 +107,9 @@ class BookingService
     /**
      * Transisi status peminjaman dengan validasi + log.
      */
-    public function transisi(Peminjaman $peminjaman, string $ke, ?string $catatan = null, ?User $aktor = null): void
+    public function transisi(Peminjaman $peminjaman, string $ke, ?string $catatan = null, ?User $aktor = null, string $aktorPeran = 'cron'): void
     {
-        DB::transaction(function () use ($peminjaman, $ke, $catatan, $aktor) {
+        DB::transaction(function () use ($peminjaman, $ke, $catatan, $aktor, $aktorPeran) {
             $peminjaman->refresh();
 
             $dari = $peminjaman->status;
@@ -131,7 +131,7 @@ class BookingService
                 $peminjaman->update(['expired_at' => now()->addHours(24)]);
             }
 
-            PeminjamanLog::log($peminjaman, $dari, $ke, $catatan, $aktor);
+            PeminjamanLog::log($peminjaman, $dari, $ke, $catatan, $aktor, $aktorPeran);
         });
     }
 

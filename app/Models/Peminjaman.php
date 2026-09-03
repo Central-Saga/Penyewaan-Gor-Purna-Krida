@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * State machine peminjaman (WORKFLOWS §B1):
@@ -58,7 +58,7 @@ class Peminjaman extends Model
     protected function casts(): array
     {
         return [
-            'tanggal' => 'date',
+            'tanggal' => 'date:Y-m-d',
             'expired_at' => 'datetime',
         ];
     }

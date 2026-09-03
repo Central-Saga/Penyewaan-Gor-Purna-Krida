@@ -10,6 +10,7 @@
         "bootstrap": "^5.3.8",
         "bootstrap-icons": "^1.13.1",
         "concurrently": "^10.0.3",
+        "gsap": "^3.15.0",
         "laravel-vite-plugin": "^3.1",
         "vite": "^8.0.0",
         "vite-plus": "0.3.0"
