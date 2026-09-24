@@ -12,7 +12,6 @@ class EnsureRole
      * Pastikan pengguna yang terautentikasi memiliki salah satu role.
      *
      * @param  Closure(Request): (Response)  $next
-     * @param  list<string>  $roles
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {

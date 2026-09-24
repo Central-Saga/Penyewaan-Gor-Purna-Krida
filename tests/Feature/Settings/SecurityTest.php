@@ -27,7 +27,19 @@ test('security settings page renders without two factor when feature is disabled
         ->assertDontSee(__('Autentikasi dua faktor'));
 });
 
-test('two factor authentication disabled when confirmation abandoned between requests', function () {});
+test('two factor authentication disabled when confirmation abandoned between requests', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    // Fortify 2FA dimatikan → halaman security tetap dapat dirender tanpa
+    // menampilkan opsi autentikasi dua faktor.
+    $this->get(route('security.edit'))
+        ->assertOk()
+        ->assertDontSee(__('Autentikasi dua faktor'));
+
+    expect($user->fresh()->two_factor_secret)->toBeNull();
+});
 
 test('password can be updated', function () {
     $user = User::factory()->create([

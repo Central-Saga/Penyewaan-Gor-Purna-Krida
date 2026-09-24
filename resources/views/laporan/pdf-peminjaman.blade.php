@@ -60,7 +60,7 @@
                     <td>{{ $p->kode }}</td>
                     <td>{{ $p->user->name }}</td>
                     <td>{{ $p->fasilitas->nama }}</td>
-                    <td>{{ $p->tanggal->toDateString() }} ({{ $p->slotSesi->nama_sesi }})</td>
+                    <td>{{ $p->tanggal->toDateString() }} ({{ $p->slotSesi->nama }})</td>
                     <td>{{ $p->status }}</td>
                 </tr>
             @empty

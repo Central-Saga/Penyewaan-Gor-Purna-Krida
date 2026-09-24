@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Services\LaporanService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LaporanExportController extends Controller
 {
-    public function __invoke(Request $request, LaporanService $laporanService)
+    public function __invoke(Request $request, LaporanService $laporanService): StreamedResponse|Response
     {
         if (! $request->user()?->hasRole('admin')) {
             abort(403);
@@ -38,6 +39,10 @@ class LaporanExportController extends Controller
         return response()->streamDownload(function () use ($service, $jenis, $mulai, $sampai) {
             $handle = fopen('php://output', 'w');
 
+            if ($handle === false) {
+                abort(500, 'Gagal membuka stream CSV.');
+            }
+
             if ($jenis === 'peminjaman') {
                 fputcsv($handle, ['Kode Booking', 'Penyewa', 'Fasilitas', 'Tanggal', 'Sesi', 'Status']);
                 $data = $service->peminjaman($mulai, $sampai);
@@ -47,7 +52,7 @@ class LaporanExportController extends Controller
                         $p->user->name,
                         $p->fasilitas->nama,
                         $p->tanggal->toDateString(),
-                        $p->slotSesi->nama_sesi,
+                        $p->slotSesi->nama,
                         $p->status,
                     ]);
                 }
@@ -62,7 +67,7 @@ class LaporanExportController extends Controller
                         $pem->peminjaman->fasilitas->nama,
                         $pem->metode,
                         $pem->nominal,
-                        $pem->verifikator?->name ?? '',
+                        $pem->verifikator->name ?? '',
                     ]);
                 }
             }
@@ -73,7 +78,7 @@ class LaporanExportController extends Controller
         ]);
     }
 
-    private function exportPdf(LaporanService $service, string $jenis, string $mulai, string $sampai)
+    private function exportPdf(LaporanService $service, string $jenis, string $mulai, string $sampai): Response
     {
         $filename = "laporan-{$jenis}-{$mulai}-sd-{$sampai}.pdf";
 

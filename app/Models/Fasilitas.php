@@ -47,9 +47,9 @@ class Fasilitas extends Model implements HasMedia
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
+            ->performOnCollections('foto')
             ->width(400)
-            ->height(300)
-            ->performOnCollections('foto');
+            ->height(300);
     }
 
     /**
@@ -100,6 +100,9 @@ class Fasilitas extends Model implements HasMedia
 
     /**
      * Scope fasilitas yang aktif tampil di daftar publik.
+     *
+     * @param  Builder<Fasilitas>  $query
+     * @return Builder<Fasilitas>
      */
     public function scopeAktif(Builder $query): Builder
     {

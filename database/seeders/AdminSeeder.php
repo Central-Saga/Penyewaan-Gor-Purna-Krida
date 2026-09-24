@@ -14,22 +14,22 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => config('seeder.admin_email', env('ADMIN_EMAIL', 'admin@gorpurnakrida.test'))],
+            ['email' => config('seeder.admin_email')],
             [
                 'name' => 'Admin GOR Purnakrida',
                 'no_hp' => null,
-                'password' => env('ADMIN_PASSWORD', 'password'),
+                'password' => config('seeder.admin_password'),
                 'email_verified_at' => now(),
                 'remember_token' => Str::random(10),
             ],
         )->assignRole('admin');
 
         User::updateOrCreate(
-            ['email' => env('PENGELOLA_EMAIL', 'pengelola@gorpurnakrida.test')],
+            ['email' => config('seeder.pengelola_email')],
             [
                 'name' => 'Pengelola GOR Purnakrida',
                 'no_hp' => null,
-                'password' => env('PENGELOLA_PASSWORD', 'password'),
+                'password' => config('seeder.pengelola_password'),
                 'email_verified_at' => now(),
                 'remember_token' => Str::random(10),
             ],

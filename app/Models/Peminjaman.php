@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -21,9 +22,9 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property int $user_id
  * @property int $fasilitas_id
  * @property int $slot_sesi_id
- * @property string $tanggal
+ * @property Carbon $tanggal
  * @property string $status
- * @property string|null $expired_at
+ * @property Carbon|null $expired_at
  * @property string|null $status_aktif
  */
 #[Fillable(['kode', 'user_id', 'fasilitas_id', 'slot_sesi_id', 'tanggal', 'status', 'expired_at'])]

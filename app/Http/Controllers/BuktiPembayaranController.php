@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pembayaran;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BuktiPembayaranController extends Controller
 {
@@ -11,7 +12,7 @@ class BuktiPembayaranController extends Controller
      * Serve bukti pembayaran — hanya pemilik peminjaman + pengelola/admin.
      * Hard Rule 4: file di disk local (private), tidak ada URL publik.
      */
-    public function __invoke(Pembayaran $pembayaran)
+    public function __invoke(Pembayaran $pembayaran): StreamedResponse
     {
         $user = auth()->user();
 

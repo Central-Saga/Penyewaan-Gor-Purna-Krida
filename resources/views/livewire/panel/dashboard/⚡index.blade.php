@@ -152,7 +152,7 @@ new #[Title('Dashboard')] class extends Component
                                 <td>
                                     <div class="fw-medium text-dark">{{ $p->tanggal->translatedFormat('d F Y') }}</div>
                                     <small class="text-secondary">
-                                        {{ $p->slotSesi->nama_sesi }} ({{ substr($p->slotSesi->jam_mulai, 0, 5) }} - {{ substr($p->slotSesi->jam_selesai, 0, 5) }} WITA)
+                                        {{ $p->slotSesi->nama }} ({{ substr($p->slotSesi->jam_mulai, 0, 5) }} - {{ substr($p->slotSesi->jam_selesai, 0, 5) }} WITA)
                                     </small>
                                 </td>
                                 <td><x-status-badge :status="$p->status" /></td>
@@ -250,7 +250,7 @@ new #[Title('Dashboard')] class extends Component
                                 </td>
                                 <td>
                                     <span class="badge bg-light text-dark border px-2.5 py-1.5">
-                                        {{ $j->slotSesi->nama_sesi }} ({{ substr($j->slotSesi->jam_mulai, 0, 5) }} - {{ substr($j->slotSesi->jam_selesai, 0, 5) }} WITA)
+                                        {{ $j->slotSesi->nama }} ({{ substr($j->slotSesi->jam_mulai, 0, 5) }} - {{ substr($j->slotSesi->jam_selesai, 0, 5) }} WITA)
                                     </span>
                                 </td>
                                 <td>

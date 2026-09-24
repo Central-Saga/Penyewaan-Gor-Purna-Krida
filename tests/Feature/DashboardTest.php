@@ -39,6 +39,8 @@ test('dashboard menampilkan ringkasan data sesuai peran', function () {
     $responsePengguna = $this->get(route('dashboard'));
     $responsePengguna->assertOk();
     $responsePengguna->assertSee($peminjaman->kode);
+    // Regresi `nama_sesi`: nama sesi (bukan kolom tak ada) harus tampil.
+    $responsePengguna->assertSee($slot->nama);
 
     // Pengelola melihat pemasukan hari ini
     $this->actingAs($pengelola);

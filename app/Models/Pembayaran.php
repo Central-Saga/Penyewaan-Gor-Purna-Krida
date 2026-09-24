@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\LogOptions;
+use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -22,7 +23,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string $status
  * @property string|null $catatan_verifikasi
  * @property int|null $diverifikasi_oleh
- * @property string|null $verified_at
+ * @property Carbon|null $verified_at
  */
 #[Fillable(['peminjaman_id', 'nominal', 'metode', 'status', 'catatan_verifikasi', 'diverifikasi_oleh', 'verified_at'])]
 class Pembayaran extends Model implements HasMedia

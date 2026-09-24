@@ -24,7 +24,7 @@ new #[Title('Form Fasilitas')] class extends Component
 
     public function mount(?Fasilitas $fasilitas = null): void
     {
-        if ($fasilitas->exists) {
+        if ($fasilitas?->exists) {
             $this->fasilitas = $fasilitas;
             $this->nama = $fasilitas->nama;
             $this->jenis = $fasilitas->jenis;

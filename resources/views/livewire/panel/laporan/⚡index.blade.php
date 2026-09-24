@@ -141,7 +141,7 @@ new #[Title('Laporan')] class extends Component
                                 <td class="fw-semibold">{{ $p->kode }}</td>
                                 <td>{{ $p->user->name }}</td>
                                 <td>{{ $p->fasilitas->nama }}</td>
-                                <td>{{ $p->tanggal->translatedFormat('d M Y') }} ({{ $p->slotSesi->nama_sesi }})</td>
+                                <td>{{ $p->tanggal->translatedFormat('d M Y') }} ({{ $p->slotSesi->nama }})</td>
                                 <td><x-status-badge :status="$p->status" /></td>
                             </tr>
                         @empty

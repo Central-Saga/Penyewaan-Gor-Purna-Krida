@@ -104,7 +104,7 @@ new #[Title('Form Peminjaman')] class extends Component
                                     <span>{{ __('Sesi & Waktu') }}</span>
                                 </div>
                                 <div class="fw-bold text-dark text-end">
-                                    {{ $slot->nama_sesi }}
+                                    {{ $slot->nama }}
                                     <div class="small text-secondary fw-normal">
                                         ({{ substr($slot->jam_mulai, 0, 5) }} - {{ substr($slot->jam_selesai, 0, 5) }} WITA)
                                     </div>
