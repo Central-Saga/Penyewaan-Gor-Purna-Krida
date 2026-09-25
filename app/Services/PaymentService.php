@@ -103,15 +103,15 @@ class PaymentService
             );
         });
 
-        // Notifikasi email dikirim setelah transaksi DB commit (driver log di dev).
+        // Notifikasi email di-queue setelah transaksi DB commit (driver log di dev).
         $peminjaman = $pembayaran->peminjaman->refresh();
 
         if ($setuju) {
-            Mail::to($peminjaman->user->email)->send(new PembayaranDiverifikasiMail($peminjaman));
+            Mail::to($peminjaman->user->email)->queue(new PembayaranDiverifikasiMail($peminjaman));
 
             return;
         }
 
-        Mail::to($peminjaman->user->email)->send(new PembayaranDitolakMail($peminjaman, (string) $catatan));
+        Mail::to($peminjaman->user->email)->queue(new PembayaranDitolakMail($peminjaman, (string) $catatan));
     }
 }

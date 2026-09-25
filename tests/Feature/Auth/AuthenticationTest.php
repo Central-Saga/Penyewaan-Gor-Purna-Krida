@@ -38,6 +38,7 @@ test('users can not authenticate with invalid password', function () {
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {
+    // Sengaja di-skip: fitur 2FA tidak diaktifkan di config/fortify.php (hanya registration + resetPasswords).
     $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
 
     Features::twoFactorAuthentication([

@@ -59,7 +59,7 @@ test('verifikasi approve mengubah status menjadi disetujui dan slot terkunci', f
     expect($pembayaran->fresh()->status)->toBe(Pembayaran::TERVERIFIKASI);
     expect($pembayaran->fresh()->diverifikasi_oleh)->toBe($pengelola->id);
 
-    Mail::assertSent(PembayaranDiverifikasiMail::class, function (PembayaranDiverifikasiMail $mail) use ($user): bool {
+    Mail::assertQueued(PembayaranDiverifikasiMail::class, function (PembayaranDiverifikasiMail $mail) use ($user): bool {
         return $mail->hasTo($user->email);
     });
 
@@ -101,7 +101,7 @@ test('verifikasi tolak wajib catatan dan membebaskan user mengupload ulang', fun
     expect($peminjaman->fresh()->status)->toBe(Peminjaman::MENUNGGU_PEMBAYARAN);
     expect($pembayaran->fresh()->status)->toBe(Pembayaran::DITOLAK);
 
-    Mail::assertSent(PembayaranDitolakMail::class, function (PembayaranDitolakMail $mail) use ($user): bool {
+    Mail::assertQueued(PembayaranDitolakMail::class, function (PembayaranDitolakMail $mail) use ($user): bool {
         return $mail->hasTo($user->email) && $mail->catatan === 'Nominal transfer kurang';
     });
 

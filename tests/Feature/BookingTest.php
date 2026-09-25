@@ -24,7 +24,7 @@ test('peminjaman dibuat mengirim email notifikasi ke pengguna', function () {
         'tanggal' => today()->addDays(3)->toDateString(),
     ]);
 
-    Mail::assertSent(PeminjamanDibuatMail::class, function (PeminjamanDibuatMail $mail) use ($peminjaman, $user): bool {
+    Mail::assertQueued(PeminjamanDibuatMail::class, function (PeminjamanDibuatMail $mail) use ($peminjaman, $user): bool {
         return $mail->peminjaman->is($peminjaman) && $mail->hasTo($user->email);
     });
 

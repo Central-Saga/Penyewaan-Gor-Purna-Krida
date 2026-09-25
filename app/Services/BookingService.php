@@ -105,9 +105,9 @@ class BookingService
             return $peminjaman;
         });
 
-        // Notifikasi email dikirim setelah transaksi DB commit agar kegagalan
+        // Notifikasi email di-queue setelah transaksi DB commit agar kegagalan
         // mail tidak membatalkan peminjaman yang sudah tersimpan.
-        Mail::to($user->email)->send(new PeminjamanDibuatMail($peminjaman));
+        Mail::to($user->email)->queue(new PeminjamanDibuatMail($peminjaman));
 
         return $peminjaman;
     }

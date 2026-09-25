@@ -17,7 +17,7 @@ test('formulir kontak valid mengirim email ke sekretariat', function () {
     $response->assertRedirect(route('kontak'));
     $response->assertSessionHas('status');
 
-    Mail::assertSent(KontakMessage::class, function (KontakMessage $mail): bool {
+    Mail::assertQueued(KontakMessage::class, function (KontakMessage $mail): bool {
         return $mail->nama === 'Budi Santoso'
             && $mail->email === 'budi@example.com'
             && $mail->hasTo(config('mail.from.address'));
@@ -34,7 +34,7 @@ test('formulir kontak menolak input tidak valid', function () {
     ]);
 
     $response->assertSessionHasErrors(['nama', 'email', 'pesan']);
-    Mail::assertNothingSent();
+    Mail::assertNothingQueued();
 });
 
 test('formulir kontak dibatasi rate limit per ip', function () {

@@ -21,7 +21,7 @@ class KontakController extends Controller
             'pesan' => ['required', 'string', 'max:2000'],
         ]);
 
-        Mail::to(config('mail.from.address'))->send(new KontakMessage(
+        Mail::to(config('mail.from.address'))->queue(new KontakMessage(
             nama: $data['nama'],
             email: $data['email'],
             subjek: $data['subjek'] ?? null,

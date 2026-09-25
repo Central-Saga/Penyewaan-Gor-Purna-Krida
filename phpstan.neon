@@ -3,6 +3,11 @@ includes:
     - vendor/nesbot/carbon/extension.neon
 
 parameters:
+    # PHPStan 2 menghapus parameter `memoryLimit`, jadi batas memori 512M
+    # (default CLI 128M kurang untuk analisis level 7) di-set lewat bootstrap.
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+
     paths:
         - app/
         - bootstrap/app.php

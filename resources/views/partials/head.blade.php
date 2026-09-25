@@ -8,7 +8,6 @@
 @php
     $metaDescription = 'Sistem peminjaman fasilitas GOR Purnakrida DISDIKPORA Badung — badminton, basket, voli, dan tenis meja. Booking online, verifikasi cepat.';
     $metaTitle = filled($title ?? null) ? $title.' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel');
-    // TODO: ganti og:image dengan gambar OG khusus (1200x630) saat aset tersedia.
     $metaImage = asset('favicon.ico');
 @endphp
 
