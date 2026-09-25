@@ -8,6 +8,18 @@ test('returns a successful response for home page', function () {
     $response->assertOk();
 });
 
+test('halaman publik memuat meta SEO dasar', function () {
+    $response = $this->get(route('home'));
+
+    $response->assertOk();
+    $response->assertSee('name="description"', false);
+    $response->assertSee('rel="canonical"', false);
+    $response->assertSee('property="og:title"', false);
+    $response->assertSee('property="og:description"', false);
+    $response->assertSee('property="og:url"', false);
+    $response->assertSee('property="og:locale" content="id_ID"', false);
+});
+
 test('returns a successful response for fasilitas catalog page', function () {
     $response = $this->get(route('fasilitas.public'));
 
@@ -38,4 +50,13 @@ test('returns a successful response for kontak page', function () {
     $response = $this->get(route('kontak'));
 
     $response->assertOk();
+});
+
+test('panduan menampilkan rekening resmi dari konfigurasi', function () {
+    $response = $this->get(route('panduan'));
+
+    $response->assertOk();
+    $response->assertSee(config('gor.rekening.bank'));
+    $response->assertSee(config('gor.rekening.nomor'));
+    $response->assertSee(config('gor.rekening.atas_nama'));
 });

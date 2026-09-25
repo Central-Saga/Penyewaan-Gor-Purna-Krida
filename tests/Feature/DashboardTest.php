@@ -54,3 +54,13 @@ test('dashboard menampilkan ringkasan data sesuai peran', function () {
     $responseAdmin->assertOk();
     $responseAdmin->assertSee('150.000');
 });
+
+test('pesan flash status tampil sebagai toast di panel', function () {
+    $pengguna = User::factory()->create();
+
+    $this->actingAs($pengguna)
+        ->withSession(['status' => 'Peminjaman berhasil dibatalkan.'])
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Peminjaman berhasil dibatalkan.');
+});

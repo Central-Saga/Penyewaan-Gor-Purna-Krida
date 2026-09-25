@@ -111,10 +111,10 @@ new #[Title('Peminjaman')] class extends Component
                         <td><x-status-badge :status="$peminjaman->status" /></td>
                         <td class="text-end">
                             @if (in_array($peminjaman->status, [Peminjaman::MENUNGGU_PEMBAYARAN, Peminjaman::MENUNGGU_VERIFIKASI], true))
-                                <a href="{{ route('pembayaran.show', $peminjaman) }}"
-                                   class="btn btn-sm btn-outline-primary">{{ __('Bayar') }}</a>
-
                                 @role('pengguna')
+                                    <a href="{{ route('pembayaran.show', $peminjaman) }}"
+                                       class="btn btn-sm btn-outline-primary">{{ __('Bayar') }}</a>
+
                                     @if ($peminjaman->user_id === auth()->id())
                                         <button wire:click="batalkan({{ $peminjaman->id }})"
                                                 wire:confirm="{{ __('Batalkan peminjaman ini?') }}"

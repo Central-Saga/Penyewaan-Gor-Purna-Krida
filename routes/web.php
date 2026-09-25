@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BuktiPembayaranController;
+use App\Http\Controllers\KontakController;
 use App\Http\Controllers\LaporanExportController;
 use App\Models\Fasilitas;
 use Illuminate\Support\Facades\Route;
@@ -21,15 +22,57 @@ Route::get('/fasilitas/{fasilitas}', fn (Fasilitas $fasilitas) => view('public.f
 Route::view('/panduan', 'public.panduan')->name('panduan');
 Route::view('/tentang', 'public.tentang')->name('tentang');
 Route::view('/kontak', 'public.kontak')->name('kontak');
+Route::post('/kontak', [KontakController::class, 'store'])->middleware('throttle:kontak')->name('kontak.store');
+
+Route::get('/sitemap.xml', function () {
+    $hariIni = now()->toAtomString();
+
+    $statis = [
+        ['loc' => route('home'), 'lastmod' => $hariIni],
+        ['loc' => route('fasilitas.public'), 'lastmod' => $hariIni],
+        ['loc' => route('panduan'), 'lastmod' => $hariIni],
+        ['loc' => route('tentang'), 'lastmod' => $hariIni],
+        ['loc' => route('kontak'), 'lastmod' => $hariIni],
+    ];
+
+    $detail = Fasilitas::query()
+        ->aktif()
+        ->orderBy('nama')
+        ->get()
+        ->map(fn (Fasilitas $fasilitas): array => [
+            'loc' => route('fasilitas.detail', $fasilitas),
+            'lastmod' => $fasilitas->updated_at?->toAtomString() ?? $hariIni,
+        ])
+        ->all();
+
+    $urls = array_merge($statis, $detail);
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+
+    foreach ($urls as $url) {
+        $xml .= '  <url>'."\n";
+        $xml .= '    <loc>'.e($url['loc']).'</loc>'."\n";
+        $xml .= '    <lastmod>'.e($url['lastmod']).'</lastmod>'."\n";
+        $xml .= '  </url>'."\n";
+    }
+
+    $xml .= '</urlset>';
+
+    return response($xml, 200, ['Content-Type' => 'application/xml']);
+})->name('sitemap.xml');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', 'panel.dashboard.index')->name('dashboard');
+
+    // Daftar peminjaman: pengguna melihat miliknya, admin/pengelola melihat semua
+    // (filter role dilakukan di dalam component).
+    Route::livewire('peminjaman', 'peminjaman.index')->name('peminjaman.index');
 
     // Pengguna: jadwal + peminjaman + pembayaran.
     Route::middleware('role:pengguna')->group(function () {
         Route::livewire('jadwal', 'jadwal.index')->name('jadwal.index');
         Route::livewire('peminjaman/baru', 'peminjaman.create')->name('peminjaman.create');
-        Route::livewire('peminjaman', 'peminjaman.index')->name('peminjaman.index');
         Route::livewire('peminjaman/{peminjaman}/bayar', 'pembayaran.show')->name('pembayaran.show');
     });
 

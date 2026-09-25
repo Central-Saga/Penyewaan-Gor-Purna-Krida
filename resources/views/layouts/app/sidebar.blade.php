@@ -185,6 +185,15 @@
                     </div>
                 </div>
             @endforeach
+
+            @if (session('status'))
+                <div class="toast align-items-center text-bg-success border-0 show" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">{{ session('status') }}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Tutup"></button>
+                    </div>
+                </div>
+            @endif
         </div>
 
         @stack('scripts')

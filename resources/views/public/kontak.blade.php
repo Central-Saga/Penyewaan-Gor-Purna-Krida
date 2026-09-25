@@ -99,27 +99,44 @@
                             Silakan datang ke loket kesekretariatan GOR Purnakrida pada jam kerja, atau kirimkan pertanyaan Anda melalui formulir di bawah ini.
                         </p>
 
-                        <form onsubmit="alert('Terima kasih! Pesan Anda telah kami terima dan akan segera ditindaklanjuti oleh sekretariat GOR Purnakrida.'); return false;">
+                        @if (session('status'))
+                            <div class="alert alert-success rounded-3 small py-2 px-3 border-0 mb-4" role="alert">
+                                <i class="bi bi-check-circle me-1"></i> {{ session('status') }}
+                            </div>
+                        @endif
+
+                        <form action="{{ route('kontak.store') }}" method="POST">
+                            @csrf
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold text-dark">Nama Lengkap</label>
-                                <input type="text" class="form-control form-control-sm rounded-3" placeholder="Masukkan nama Anda" required>
+                                <label class="form-label small fw-semibold text-dark" for="kontak-nama">Nama Lengkap</label>
+                                <input id="kontak-nama" type="text" name="nama" value="{{ old('nama') }}"
+                                       class="form-control form-control-sm rounded-3 @error('nama') is-invalid @enderror"
+                                       placeholder="Masukkan nama Anda" required>
+                                @error('nama')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold text-dark">Alamat Email / Nomor WhatsApp</label>
-                                <input type="text" class="form-control form-control-sm rounded-3" placeholder="Contoh: 08123456789" required>
+                                <label class="form-label small fw-semibold text-dark" for="kontak-email">Alamat Email / Nomor WhatsApp</label>
+                                <input id="kontak-email" type="text" name="email" value="{{ old('email') }}"
+                                       class="form-control form-control-sm rounded-3 @error('email') is-invalid @enderror"
+                                       placeholder="Contoh: nama@email.com atau 08123456789" required>
+                                @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold text-dark">Subjek / Topik Pertanyaan</label>
-                                <select class="form-select form-select-sm rounded-3">
-                                    <option>Pertanyaan Ketersediaan Fasilitas</option>
-                                    <option>Penyewaan untuk Acara / Turnamen</option>
-                                    <option>Kendala Pembayaran / Verifikasi</option>
-                                    <option>Lainnya</option>
+                                <label class="form-label small fw-semibold text-dark" for="kontak-subjek">Subjek / Topik Pertanyaan</label>
+                                <select id="kontak-subjek" name="subjek" class="form-select form-select-sm rounded-3">
+                                    <option value="Pertanyaan Ketersediaan Fasilitas" @selected(old('subjek') === 'Pertanyaan Ketersediaan Fasilitas')>Pertanyaan Ketersediaan Fasilitas</option>
+                                    <option value="Penyewaan untuk Acara / Turnamen" @selected(old('subjek') === 'Penyewaan untuk Acara / Turnamen')>Penyewaan untuk Acara / Turnamen</option>
+                                    <option value="Kendala Pembayaran / Verifikasi" @selected(old('subjek') === 'Kendala Pembayaran / Verifikasi')>Kendala Pembayaran / Verifikasi</option>
+                                    <option value="Lainnya" @selected(old('subjek') === 'Lainnya')>Lainnya</option>
                                 </select>
+                                @error('subjek')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-4">
-                                <label class="form-label small fw-semibold text-dark">Pesan / Pertanyaan</label>
-                                <textarea class="form-control form-control-sm rounded-3" rows="4" placeholder="Tuliskan pertanyaan Anda secara jelas..." required></textarea>
+                                <label class="form-label small fw-semibold text-dark" for="kontak-pesan">Pesan / Pertanyaan</label>
+                                <textarea id="kontak-pesan" name="pesan" rows="4"
+                                          class="form-control form-control-sm rounded-3 @error('pesan') is-invalid @enderror"
+                                          placeholder="Tuliskan pertanyaan Anda secara jelas..." required>{{ old('pesan') }}</textarea>
+                                @error('pesan')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
 
                             <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-semibold shadow-sm">

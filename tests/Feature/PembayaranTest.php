@@ -1,5 +1,7 @@
 <?php
 
+use App\Mail\PembayaranDitolakMail;
+use App\Mail\PembayaranDiverifikasiMail;
 use App\Models\Fasilitas;
 use App\Models\Pembayaran;
 use App\Models\Peminjaman;
@@ -8,6 +10,7 @@ use App\Models\User;
 use App\Services\BookingService;
 use App\Services\PaymentService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -34,6 +37,7 @@ test('upload bukti bayar mengubah status menjadi menunggu_verifikasi dan menyimp
 
 test('verifikasi approve mengubah status menjadi disetujui dan slot terkunci', function () {
     Storage::fake('local');
+    Mail::fake();
 
     $user = User::factory()->create();
     $pengelola = User::factory()->pengelola()->create();
@@ -55,6 +59,12 @@ test('verifikasi approve mengubah status menjadi disetujui dan slot terkunci', f
     expect($pembayaran->fresh()->status)->toBe(Pembayaran::TERVERIFIKASI);
     expect($pembayaran->fresh()->diverifikasi_oleh)->toBe($pengelola->id);
 
+    Mail::assertSent(PembayaranDiverifikasiMail::class, function (PembayaranDiverifikasiMail $mail) use ($user): bool {
+        return $mail->hasTo($user->email);
+    });
+
+    expect((new PembayaranDiverifikasiMail($peminjaman->fresh()))->render())->toContain($peminjaman->kode);
+
     // Booking kedua pada slot sama ditolak
     $userLain = User::factory()->create();
     expect(fn () => app(BookingService::class)->create($userLain, [
@@ -66,6 +76,7 @@ test('verifikasi approve mengubah status menjadi disetujui dan slot terkunci', f
 
 test('verifikasi tolak wajib catatan dan membebaskan user mengupload ulang', function () {
     Storage::fake('local');
+    Mail::fake();
 
     $user = User::factory()->create();
     $pengelola = User::factory()->pengelola()->create();
@@ -89,6 +100,13 @@ test('verifikasi tolak wajib catatan dan membebaskan user mengupload ulang', fun
 
     expect($peminjaman->fresh()->status)->toBe(Peminjaman::MENUNGGU_PEMBAYARAN);
     expect($pembayaran->fresh()->status)->toBe(Pembayaran::DITOLAK);
+
+    Mail::assertSent(PembayaranDitolakMail::class, function (PembayaranDitolakMail $mail) use ($user): bool {
+        return $mail->hasTo($user->email) && $mail->catatan === 'Nominal transfer kurang';
+    });
+
+    expect((new PembayaranDitolakMail($peminjaman->fresh(), 'Nominal transfer kurang'))->render())
+        ->toContain('Nominal transfer kurang');
 });
 
 test('akses bukti pembayaran dibatasi untuk pemilik dan pengelola/admin saja', function () {
@@ -120,4 +138,22 @@ test('akses bukti pembayaran dibatasi untuk pemilik dan pengelola/admin saja', f
     // Pengelola 200
     $this->actingAs($pengelola);
     $this->get(route('bukti.show', $pembayaran))->assertOk();
+});
+
+test('halaman pembayaran menampilkan rekening resmi dari konfigurasi', function () {
+    $user = User::factory()->pengguna()->create();
+    $fasilitas = Fasilitas::factory()->create();
+    $slot = SlotSesi::factory()->for($fasilitas)->pagi()->create();
+
+    $peminjaman = app(BookingService::class)->create($user, [
+        'fasilitas_id' => $fasilitas->id,
+        'slot_sesi_id' => $slot->id,
+        'tanggal' => today()->addDays(2)->toDateString(),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('pembayaran.show', $peminjaman))
+        ->assertOk()
+        ->assertSee(config('gor.rekening.bank'))
+        ->assertSee(config('gor.rekening.nomor'));
 });

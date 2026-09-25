@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use App\Mail\PeminjamanDibuatMail;
 use App\Models\BlokirSlot;
 use App\Models\Peminjaman;
 use App\Models\PeminjamanLog;
 use App\Models\SlotSesi;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -43,7 +45,7 @@ class BookingService
      */
     public function create(User $user, array $data): Peminjaman
     {
-        return DB::transaction(function () use ($user, $data) {
+        $peminjaman = DB::transaction(function () use ($user, $data) {
             $slot = SlotSesi::query()
                 ->whereKey($data['slot_sesi_id'])
                 ->where('fasilitas_id', $data['fasilitas_id'])
@@ -102,6 +104,12 @@ class BookingService
 
             return $peminjaman;
         });
+
+        // Notifikasi email dikirim setelah transaksi DB commit agar kegagalan
+        // mail tidak membatalkan peminjaman yang sudah tersimpan.
+        Mail::to($user->email)->send(new PeminjamanDibuatMail($peminjaman));
+
+        return $peminjaman;
     }
 
     /**

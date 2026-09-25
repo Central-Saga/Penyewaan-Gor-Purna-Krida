@@ -58,7 +58,7 @@
                                  alt="Arena GOR Purnakrida" class="w-100 h-100 object-fit-cover" loading="lazy">
                             <div class="position-absolute top-0 start-0 m-3">
                                 <span class="badge rounded-pill bg-success bg-opacity-90 px-3 py-1.5 shadow-sm backdrop-blur">
-                                    <i class="bi bi-circle-fill me-1 small"></i> Buka • 08.00 - 16.00 WITA
+                                    <i class="bi bi-circle-fill me-1 small"></i> Buka • 08.00 - 21.00 WITA (sesuai sesi)
                                 </span>
                             </div>
                         </div>

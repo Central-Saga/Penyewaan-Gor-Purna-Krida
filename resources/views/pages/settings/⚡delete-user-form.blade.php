@@ -56,7 +56,7 @@ new class extends Component {
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" wire:click="$set('showing', false')">
+                            <button type="button" class="btn btn-secondary" wire:click="$set('showing', false)">
                                 {{ __('Batal') }}
                             </button>
                             <button type="submit" class="btn btn-danger" data-test="confirm-delete-user-button">

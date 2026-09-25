@@ -1,5 +1,6 @@
 <?php
 
+use App\Mail\PeminjamanDibuatMail;
 use App\Models\BlokirSlot;
 use App\Models\Fasilitas;
 use App\Models\Peminjaman;
@@ -7,7 +8,30 @@ use App\Models\PeminjamanLog;
 use App\Models\SlotSesi;
 use App\Models\User;
 use App\Services\BookingService;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+
+test('peminjaman dibuat mengirim email notifikasi ke pengguna', function () {
+    Mail::fake();
+
+    $fasilitas = Fasilitas::factory()->create();
+    $slot = SlotSesi::factory()->for($fasilitas)->pagi()->create();
+    $user = User::factory()->create(['email' => 'penyewa@example.com']);
+
+    $peminjaman = app(BookingService::class)->create($user, [
+        'fasilitas_id' => $fasilitas->id,
+        'slot_sesi_id' => $slot->id,
+        'tanggal' => today()->addDays(3)->toDateString(),
+    ]);
+
+    Mail::assertSent(PeminjamanDibuatMail::class, function (PeminjamanDibuatMail $mail) use ($peminjaman, $user): bool {
+        return $mail->peminjaman->is($peminjaman) && $mail->hasTo($user->email);
+    });
+
+    // Pastikan view email benar-benar bisa dirender (tidak ada error blade).
+    $html = (new PeminjamanDibuatMail($peminjaman->fresh()))->render();
+    expect($html)->toContain($peminjaman->kode);
+});
 
 test('test_dua_booking_slot_sama_yang_kedua_ditolak', function () {
     $service = app(BookingService::class);

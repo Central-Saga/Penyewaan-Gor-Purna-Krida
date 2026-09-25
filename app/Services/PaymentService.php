@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Mail\PembayaranDitolakMail;
+use App\Mail\PembayaranDiverifikasiMail;
 use App\Models\Pembayaran;
 use App\Models\Peminjaman;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class PaymentService
@@ -99,5 +102,16 @@ class PaymentService
                 $verifikator,
             );
         });
+
+        // Notifikasi email dikirim setelah transaksi DB commit (driver log di dev).
+        $peminjaman = $pembayaran->peminjaman->refresh();
+
+        if ($setuju) {
+            Mail::to($peminjaman->user->email)->send(new PembayaranDiverifikasiMail($peminjaman));
+
+            return;
+        }
+
+        Mail::to($peminjaman->user->email)->send(new PembayaranDitolakMail($peminjaman, (string) $catatan));
     }
 }

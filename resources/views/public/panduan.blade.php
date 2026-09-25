@@ -161,7 +161,7 @@
                                 </h2>
                                 <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                     <div class="accordion-body text-secondary small">
-                                        Slot yang Anda pilih akan dikunci sementara selama batas waktu pembayaran yang ditentukan di sistem (biasanya 2 jam). Jika bukti bayar belum diunggah dalam batas waktu tersebut, slot otomatis terbuka kembali untuk pengguna lain.
+                                        Slot yang Anda pilih akan dikunci sementara selama batas waktu pembayaran yang ditentukan di sistem (24 jam). Jika bukti bayar belum diunggah dalam batas waktu tersebut, slot otomatis terbuka kembali untuk pengguna lain.
                                     </div>
                                 </div>
                             </div>
@@ -209,11 +209,11 @@
 
                         <div class="p-3 rounded-3 bg-light border mb-3">
                             <div class="text-muted small">Bank Penerima</div>
-                            <div class="fw-bold text-dark">Bank BPD Bali</div>
+                            <div class="fw-bold text-dark">{{ config('gor.rekening.bank') }}</div>
                             <div class="text-muted small mt-2">Nama Pemilik Rekening</div>
-                            <div class="fw-bold text-dark small">Penerimaan Sewa GOR DISDIKPORA Badung</div>
+                            <div class="fw-bold text-dark small">{{ config('gor.rekening.atas_nama') }}</div>
                             <div class="text-muted small mt-2">Nomor Rekening Resmi</div>
-                            <div class="fw-bold text-primary fs-5 font-monospace">010 02 02 019283 1</div>
+                            <div class="fw-bold text-primary fs-5 font-monospace">{{ config('gor.rekening.nomor') }}</div>
                         </div>
 
                         <div class="alert alert-warning small py-2 px-3 border-0 rounded-3 mb-0">

@@ -85,9 +85,9 @@ new #[Title('Pembayaran')] class extends Component
                             {{ __('Transfer ke rekening berikut atau pindai QRIS, lalu unggah bukti:') }}
                         </p>
                         <div class="border rounded p-3 mb-3 small">
-                            <div><strong>Bank Daerah Badung</strong></div>
-                            <div>No. Rek: 1234-5678-90</div>
-                            <div>a.n. DISDIKPORA Kab. Badung</div>
+                            <div><strong>{{ config('gor.rekening.bank') }}</strong></div>
+                            <div>No. Rek: {{ config('gor.rekening.nomor') }}</div>
+                            <div>a.n. {{ config('gor.rekening.atas_nama') }}</div>
                         </div>
 
                         <form wire:submit="upload" class="d-grid gap-3">
