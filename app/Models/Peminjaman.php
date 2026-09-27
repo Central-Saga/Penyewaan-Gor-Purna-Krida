@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * State machine peminjaman (WORKFLOWS §B1):
@@ -31,7 +32,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class Peminjaman extends Model
 {
     /** @use HasFactory<PeminjamanFactory> */
-    use HasFactory, LogsActivity;
+    use HasFactory, InteractsWithMedia, LogsActivity;
 
     public const MENUNGGU_PEMBAYARAN = 'menunggu_pembayaran';
 
@@ -110,5 +111,13 @@ class Peminjaman extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(PeminjamanLog::class);
+    }
+
+    /**
+     * Register media collections.
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('bukti_pembayaran');
     }
 }

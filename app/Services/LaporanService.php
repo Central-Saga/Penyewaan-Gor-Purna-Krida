@@ -5,10 +5,60 @@ namespace App\Services;
 use App\Models\Fasilitas;
 use App\Models\Pembayaran;
 use App\Models\Peminjaman;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 
 class LaporanService
 {
+    /**
+     * Get per-facility statistics including total bookings, active bookings, and verified income.
+     */
+    public function statistikFasilitas(?string $mulai = null, ?string $sampai = null): Collection
+    {
+        return Fasilitas::query()
+            ->withCount(['peminjaman as total_peminjaman' => function ($q) use ($mulai, $sampai) {
+                if ($mulai) {
+                    $q->whereDate('tanggal', '>=', $mulai);
+                }
+                if ($sampai) {
+                    $q->whereDate('tanggal', '<=', $sampai);
+                }
+            }])
+            ->withCount(['peminjaman as peminjaman_aktif' => function ($q) use ($mulai, $sampai) {
+                if ($mulai) {
+                    $q->whereDate('tanggal', '>=', $mulai);
+                }
+                if ($sampai) {
+                    $q->whereDate('tanggal', '<=', $sampai);
+                }
+                $q->whereIn('status', Peminjaman::STATUS_AKTIF);
+            }])
+            ->with(['media'])
+            ->orderBy('nama')
+            ->get()
+            ->map(function ($facility) use ($mulai, $sampai) {
+                // Calculate verified income for this facility
+                $incomeQuery = Pembayaran::where('status', Pembayaran::TERVERIFIKASI);
+
+                if ($mulai) {
+                    $incomeQuery->whereHas('peminjaman', function ($q) use ($mulai) {
+                        $q->whereDate('tanggal', '>=', $mulai);
+                    });
+                }
+
+                if ($sampai) {
+                    $incomeQuery->whereHas('peminjaman', function ($q) use ($sampai) {
+                        $q->whereDate('tanggal', '<=', $sampai);
+                    });
+                }
+
+                $incomeQuery->whereHas('peminjaman', fn ($q) => $q->where('fasilitas_id', $facility->id));
+
+                $facility->pendapatan_terverifikasi = $incomeQuery->sum('nominal');
+
+                return $facility;
+            });
+    }
+
     /**
      * Data agregat peminjaman berdasarkan periode tanggal.
      *

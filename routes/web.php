@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\BuktiPembayaranController;
 use App\Http\Controllers\KontakController;
 use App\Http\Controllers\LaporanExportController;
@@ -54,7 +55,7 @@ Route::get('/sitemap.xml', function () {
         $xml .= '  <url>'."\n";
         $xml .= '    <loc>'.e($url['loc']).'</loc>'."\n";
         $xml .= '    <lastmod>'.e($url['lastmod']).'</lastmod>'."\n";
-        $xml .= '  </url>'."\n";
+        $xml .= '</url>'."\n";
     }
 
     $xml .= '</urlset>';
@@ -66,7 +67,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', 'panel.dashboard.index')->name('dashboard');
 
     // Daftar peminjaman: pengguna melihat miliknya, admin/pengelola melihat semua
-    // (filter role dilakukan di dalam component).
     Route::livewire('peminjaman', 'peminjaman.index')->name('peminjaman.index');
 
     // Pengguna: jadwal + peminjaman + pembayaran.
@@ -77,14 +77,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Verifikasi pembayaran: pengelola/admin.
-    // Verifikasi pembayaran & Data transaksi: pengelola/admin.
     Route::middleware('role:admin,pengelola')->group(function () {
         Route::livewire('verifikasi', 'verifikasi.index')->name('verifikasi.index');
         Route::livewire('transaksi', 'panel.transaksi.index')->name('transaksi.index');
     });
 
-    // Panel pengelola/admin: fasilitas, slot, blokir.
+    // Panel pengelola/admin: fasilitas, slot, blokir, activity logs.
     Route::middleware('role:admin,pengelola')->prefix('panel')->group(function () {
+        Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity.logs.index');
+        Route::get('activity-logs/export', [ActivityLogController::class, 'export'])->name('activity.logs.export');
+        Route::get('activity-logs/{log}', [ActivityLogController::class, 'show'])->name('activity.logs.show');
+
         Route::livewire('fasilitas', 'panel.fasilitas.index')->name('panel.fasilitas.index');
         Route::livewire('fasilitas/baru', 'panel.fasilitas.form')->name('panel.fasilitas.create');
         Route::livewire('fasilitas/{fasilitas}/ubah', 'panel.fasilitas.form')->name('panel.fasilitas.edit');

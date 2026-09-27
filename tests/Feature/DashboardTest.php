@@ -64,3 +64,44 @@ test('pesan flash status tampil sebagai toast di panel', function () {
         ->assertOk()
         ->assertSee('Peminjaman berhasil dibatalkan.');
 });
+
+test('admin dashboard menampilkan statistik per lapangan', function () {
+    $admin = User::factory()->admin()->create();
+
+    // Create a facility
+    $fasilitas = Fasilitas::factory()->create(['nama' => 'Badminton 1']);
+
+    // Create an approved booking for this facility
+    $slot = SlotSesi::factory()->for($fasilitas)->pagi()->create();
+    $user = User::factory()->create();
+
+    $peminjaman = app(BookingService::class)->create($user, [
+        'fasilitas_id' => $fasilitas->id,
+        'slot_sesi_id' => $slot->id,
+        'tanggal' => today()->toDateString(),
+    ]);
+
+    $this->actingAs($admin);
+    $response = $this->get(route('dashboard'));
+    $response->assertOk();
+    $response->assertSee($fasilitas->nama);
+});
+
+test('pengelola dashboard menampilkan okupansi lapangan hari ini', function () {
+    $pengelola = User::factory()->pengelola()->create();
+
+    $fasilitas = Fasilitas::factory()->create(['nama' => 'Volley Ball']);
+    $slot = SlotSesi::factory()->for($fasilitas)->pagi()->create();
+    $user = User::factory()->create();
+
+    $peminjaman = app(BookingService::class)->create($user, [
+        'fasilitas_id' => $fasilitas->id,
+        'slot_sesi_id' => $slot->id,
+        'tanggal' => today()->toDateString(),
+    ]);
+
+    $this->actingAs($pengelola);
+    $response = $this->get(route('dashboard'));
+    $response->assertOk();
+    $response->assertSee($fasilitas->nama);
+});

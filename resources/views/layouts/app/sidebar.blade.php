@@ -74,6 +74,11 @@
                            href="{{ route('panel.slot-sesi.index') }}" wire:navigate>
                             <i class="bi bi-clock-history"></i>
                             <span>{{ __('Slot & Blokir Jadwal') }}</span>
+                        <a class="app-nav-link {{ request()->routeIs('activity.logs.*') ? 'active' : '' }}"
+                           href="{{ route('activity.logs.index') }}" wire:navigate>
+                            <i class="bi bi-clock-history"></i>
+                            <span>{{ __('Log Aktivitas') }}</span>
+                        </a>
                         </a>
                     @endhasrole
 

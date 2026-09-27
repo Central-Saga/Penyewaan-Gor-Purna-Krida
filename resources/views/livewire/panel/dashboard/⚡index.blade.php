@@ -37,6 +37,8 @@ new #[Title('Dashboard')] class extends Component
                 ->whereIn('status', Peminjaman::STATUS_AKTIF)
                 ->orderBy('slot_sesi_id')
                 ->get();
+            $data['okupansiHariIni'] = $data['jadwalHariIni']->groupBy('fasilitas_id');
+            $data['semuaFasilitas'] = \App\Models\Fasilitas::orderBy('nama')->get();
         } else { // admin
             $data['totalPeminjaman'] = Peminjaman::count();
             $data['totalPemasukan'] = Pembayaran::where('status', Pembayaran::TERVERIFIKASI)->sum('nominal');
@@ -46,6 +48,7 @@ new #[Title('Dashboard')] class extends Component
                 ->groupBy('status')
                 ->pluck('total', 'status')
                 ->toArray();
+            $data['statistikFasilitas'] = app(\App\Services\LaporanService::class)->statistikFasilitas();
         }
 
         return $this->view($data)->layout('layouts.app');
@@ -346,5 +349,39 @@ new #[Title('Dashboard')] class extends Component
                 </div>
             </div>
         </div>
+
+    <div class="card border-0 rounded-4 shadow-sm mt-4">
+        <div class="card-header bg-transparent border-0 p-4 pb-2">
+            <h5 class="fw-bold text-dark mb-1">{{ __('Statistik Per Lapangan') }}</h5>
+            <p class="text-secondary small mb-0">{{ __('Total peminjaman, peminjaman aktif, dan pendapatan terverifikasi tiap fasilitas.') }}</p>
+        </div>
+        <div class="card-body p-4 pt-2">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>{{ __('Fasilitas') }}</th>
+                            <th class="text-center">{{ __('Total Peminjaman') }}</th>
+                            <th class="text-center">{{ __('Peminjaman Aktif') }}</th>
+                            <th class="text-end">{{ __('Pendapatan Terverifikasi') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($statistikFasilitas as $stat)
+                            <tr>
+                                <td class="fw-semibold">{{ $stat->nama }}</td>
+                                <td class="text-center">{{ $stat->total_peminjaman }}</td>
+                                <td class="text-center">{{ $stat->peminjaman_aktif }}</td>
+                                <td class="text-end fw-bold text-success">Rp {{ number_format($stat->pendapatan_terverifikasi, 0, ',', '.') }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" class="text-center text-secondary py-4">{{ __('Belum ada fasilitas terdaftar.') }}</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     @endif
 </div>
