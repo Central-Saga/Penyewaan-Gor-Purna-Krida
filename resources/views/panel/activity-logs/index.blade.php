@@ -1,12 +1,37 @@
 @php
     $title = 'Log Aktivitas';
+
+    $modelLabels = [
+        'App\Models\User' => 'Pengguna',
+        'App\Models\Fasilitas' => 'Fasilitas',
+        'App\Models\Peminjaman' => 'Peminjaman',
+        'App\Models\PeminjamanLog' => 'Log Peminjaman',
+    ];
+
+    $eventLabels = [
+        'created' => ['Dibuat', 'success'],
+        'updated' => ['Diperbarui', 'warning'],
+        'deleted' => ['Dihapus', 'danger'],
+        'restored' => ['Dipulihkan', 'info'],
+        'logged-in' => ['Masuk', 'info'],
+        'logged-out' => ['Keluar', 'secondary'],
+    ];
+
+    $subjectLabel = function ($log) {
+        $subject = rescue(fn () => $log->subject, null, false);
+
+        return $subject?->kode
+            ?? $subject?->nama
+            ?? $subject?->name
+            ?? ($subject ? $subject->getKey() : null);
+    };
 @endphp
 <x-layouts::app.sidebar :title="$title">
     <div class="container-fluid py-4">
         <div class="row mb-4">
             <div class="col">
                 <h1 class="h3 mb-0">Log Aktivitas</h1>
-                <p class="text-muted">Daftar semua aktivitas sistem yang dilakukan oleh pengguna.</p>
+                <p class="text-muted mb-0">Daftar semua aktivitas sistem yang dilakukan oleh pengguna.</p>
             </div>
         </div>
 
@@ -22,8 +47,8 @@
                             <label for="endDate" class="form-label">Tanggal Akhir</label>
                             <input type="date" id="endDate" name="end_date" class="form-control" value="{{ request('end_date') }}">
                         </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-primary me-2">
+                        <div class="col-md-3 d-flex align-items-end gap-2 pb-1">
+                            <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-search"></i> Filter
                             </button>
                             <a href="{{ route('activity.logs.export', array_filter(['start_date' => request('start_date'), 'end_date' => request('end_date')])) }}" class="btn btn-success">
@@ -38,37 +63,47 @@
         <div class="card border-0 rounded-4 shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
                             <tr>
-                                <th width="180">Timestamp</th>
-                                <th width="120">Pengguna</th>
-                                <th width="100">Log</th>
-                                <th width="60">Event</th>
-                                <th width="100">Model</th>
+                                <th width="170">Timestamp</th>
+                                <th width="150">Pengguna</th>
+                                <th width="110">Log</th>
+                                <th width="120">Event</th>
+                                <th width="130">Model</th>
                                 <th>Subject</th>
-                                <th>Properties</th>
-                                <th>Aksi</th>
+                                <th width="110">Properties</th>
+                                <th width="90" class="text-end">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($query as $log)
+                                @php
+                                    [$eventLabel, $eventColor] = $eventLabels[$log->event] ?? [ucfirst((string) $log->event), 'secondary'];
+                                    $subjectText = $subjectLabel($log);
+                                    $propCount = count($log->properties->toArray() ?: []);
+                                @endphp
                                 <tr>
-                                    <td>{{ $log->created_at->format('Y-m-d H:i:s') }}</td>
-                                    <td>{{ $log->causer?->name ?? 'System' }}</td>
-                                    <td><span class="badge bg-info">{{ $log->log_name }}</span></td>
-                                    <td><span class="badge bg-secondary">{{ $log->event }}</span></td>
-                                    <td>{{ $log->subject_type ?? '-' }}</td>
-                                    <td>{{ $log->subject?->kode ?? $log->subject?->nama ?? '-' }}</td>
+                                    <td class="text-nowrap">{{ $log->created_at->translatedFormat('d M Y, H:i') }}</td>
                                     <td>
-                                        @php
-                                            $keys = array_keys($log->properties->toArray() ?: []);
-                                        @endphp
-                                        <small class="text-muted">
-                                            {{ count($keys) }} properti
-                                        </small>
+                                        @if($log->causer)
+                                            <span class="fw-semibold">{{ $log->causer->name }}</span>
+                                        @else
+                                            <span class="text-muted">System</span>
+                                        @endif
                                     </td>
+                                    <td><span class="badge text-bg-info">{{ ucfirst((string) $log->log_name) }}</span></td>
+                                    <td><span class="badge text-bg-{{ $eventColor }}">{{ $eventLabel }}</span></td>
+                                    <td>{{ $modelLabels[$log->subject_type] ?? ($log->subject_type ? class_basename($log->subject_type) : '—') }}</td>
+                                    <td>{{ $subjectText ?? '—' }}</td>
                                     <td>
+                                        @if($propCount > 0)
+                                            <span class="text-muted">{{ $propCount }} properti</span>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
                                         <a href="{{ route('activity.logs.show', $log) }}" class="btn btn-sm btn-outline-primary">
                                             Detail
                                         </a>
@@ -84,9 +119,9 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 @if($query->hasPages())
-                    <div class="mt-3">
+                    <div class="mt-3 d-flex justify-content-center">
                         {{ $query->links() }}
                     </div>
                 @endif

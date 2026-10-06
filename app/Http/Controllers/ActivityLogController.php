@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\View\View;
 use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogController extends Controller
@@ -10,7 +12,7 @@ class ActivityLogController extends Controller
     /**
      * List all activity logs.
      */
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $query = Activity::with('causer')
             ->when($request->filled('start_date'), fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
@@ -25,17 +27,17 @@ class ActivityLogController extends Controller
     /**
      * Show a specific activity log.
      */
-    public function show(Activity $log)
+    public function show(Activity $log): View
     {
-        return view('panel.activity-logs.show');
+        return view('panel.activity-logs.show', compact('log'));
     }
 
     /**
      * Export activity logs to CSV.
      */
-    public function export(Request $request)
+    public function export(Request $request): Response
     {
-        $validated = $request->validate([
+        $request->validate([
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date'],
         ]);
@@ -47,14 +49,26 @@ class ActivityLogController extends Controller
 
         $logs = $query->get();
 
+        $modelLabels = [
+            'App\Models\User' => 'Pengguna',
+            'App\Models\Fasilitas' => 'Fasilitas',
+            'App\Models\Peminjaman' => 'Peminjaman',
+            'App\Models\PeminjamanLog' => 'Log Peminjaman',
+        ];
+
         $handle = tmpfile();
-        fputcsv($handle, ['Timestamp', 'User', 'Action', 'Model', 'Properties']);
+        fputcsv($handle, ['Timestamp', 'Pengguna', 'Log', 'Model', 'Properties']);
         foreach ($logs as $log) {
+            $causer = $log->causer;
+            $model = $log->subject_type
+                ? ($modelLabels[$log->subject_type] ?? class_basename($log->subject_type))
+                : '-';
+
             fputcsv($handle, [
                 $log->created_at->format('Y-m-d H:i:s'),
-                $log->causer?->name ?? 'System',
+                $causer === null ? 'System' : (string) $causer->getAttribute('name'),
                 $log->log_name,
-                $log->subject_type ?? '-',
+                $model,
                 json_encode($log->properties->toArray() ?: []),
             ]);
         }
