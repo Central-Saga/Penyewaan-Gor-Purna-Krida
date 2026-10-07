@@ -89,6 +89,26 @@ new #[Title('Jadwal')] class extends Component
         </div>
     </div>
 
+    {{-- Highlight: Tata Cara + Unduh Template Surat Resmi (syarat utama pengajuan) --}}
+    <div class="rounded-4 border border-primary border-opacity-50 bg-primary-subtle shadow-sm p-4 mb-4 d-flex flex-wrap gap-3 align-items-center">
+        <div class="flex-grow-1">
+            <h6 class="fw-bold text-primary-emphasis mb-1">
+                <i class="bi bi-file-earmark-text me-1"></i> {{ __('Tata Cara Menyewa & Template Surat Resmi') }}
+            </h6>
+            <p class="text-secondary small mb-0">
+                {{ __('Pengajuan sewa wajib dilampiri surat peminjaman resmi berkop instansi. Baca tata caranya dan unduh template surat terlebih dahulu.') }}
+            </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('panduan') }}#alur" target="_blank" class="btn btn-outline-primary rounded-pill fw-semibold">
+                <i class="bi bi-list-ol me-1"></i> {{ __('Tata Cara Menyewa') }}
+            </a>
+            <a href="{{ asset(config('gor.template_surat')) }}" download class="btn btn-primary rounded-pill fw-semibold">
+                <i class="bi bi-download me-1"></i> {{ __('Unduh Template Surat (.docx)') }}
+            </a>
+        </div>
+    </div>
+
     <div class="card border-0 rounded-4 shadow-sm mb-4">
         <div class="card-body p-4">
             <form wire:submit.prevent class="row g-3">

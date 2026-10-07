@@ -23,16 +23,12 @@ test('pengelola dan admin dapat mengakses data transaksi dan memfilter status', 
         'fasilitas_id' => $fasilitas->id,
         'slot_sesi_id' => $slot->id,
         'tanggal' => today()->toDateString(),
-    ]);
-    $file = UploadedFile::fake()->image('bukti.jpg');
-    $pembayaran = app(PaymentService::class)->upload(
-        $peminjaman,
-        $file,
-        'transfer',
-        $pengguna
-    );
+    ], UploadedFile::fake()->create('surat.pdf', 100));
 
-    app(PaymentService::class)->verifikasi($pembayaran, true, null, $pengelola);
+    app(BookingService::class)->setujuiPengajuan($peminjaman, $pengelola);
+
+    $file = UploadedFile::fake()->image('bukti.jpg');
+    app(PaymentService::class)->upload($peminjaman->fresh(), $file, 'transfer', $pengguna);
 
     // Pengelola can see transaksi page
     $this->actingAs($pengelola);

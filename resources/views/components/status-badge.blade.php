@@ -7,12 +7,12 @@
         // peminjaman
         'menunggu_pembayaran' => ['Menunggu Pembayaran', 'warning'],
         'menunggu_verifikasi' => ['Menunggu Verifikasi', 'info'],
-        'disetujui' => ['Disetujui', 'success'],
+        'disetujui' => ['Tersewa', 'success'],
         'dibatalkan' => ['Dibatalkan', 'secondary'],
         'selesai' => ['Selesai', 'dark'],
         // pembayaran
         'terverifikasi' => ['Terverifikasi', 'success'],
-        'ditolak' => ['Ditolak', 'danger'],
+        'ditolak' => ['Perlu Revisi', 'danger'],
         // umum
         'aktif' => ['Aktif', 'success'],
         'nonaktif' => ['Nonaktif', 'secondary'],

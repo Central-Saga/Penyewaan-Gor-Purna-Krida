@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\BuktiPembayaranController;
 use App\Http\Controllers\KontakController;
 use App\Http\Controllers\LaporanExportController;
+use App\Http\Controllers\SuratPeminjamanController;
 use App\Models\Fasilitas;
 use Illuminate\Support\Facades\Route;
 
@@ -73,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:pengguna')->group(function () {
         Route::livewire('jadwal', 'jadwal.index')->name('jadwal.index');
         Route::livewire('peminjaman/baru', 'peminjaman.create')->name('peminjaman.create');
+        Route::livewire('peminjaman/{peminjaman}/revisi', 'peminjaman.revisi')->name('peminjaman.revisi');
         Route::livewire('peminjaman/{peminjaman}/bayar', 'pembayaran.show')->name('pembayaran.show');
     });
 
@@ -98,12 +100,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Panel admin: kelola pengguna & laporan.
     Route::middleware('role:admin')->group(function () {
         Route::livewire('panel/pengguna', 'panel.pengguna.index')->name('panel.pengguna.index');
+        Route::livewire('panel/role-permission', 'panel.role.index')->name('panel.role.index');
         Route::livewire('laporan', 'panel.laporan.index')->name('laporan.index');
         Route::get('laporan/export', LaporanExportController::class)->name('laporan.export');
     });
 
     // Bukti pembayaran private (Hard Rule 4): pemilik + pengelola/admin.
     Route::get('bukti/{pembayaran}', BuktiPembayaranController::class)->name('bukti.show');
+
+    // Surat peminjaman resmi private (Hard Rule 4): pemilik + pengelola/admin.
+    Route::get('surat/{peminjaman}', SuratPeminjamanController::class)->name('surat.show');
 });
 
 require __DIR__.'/settings.php';

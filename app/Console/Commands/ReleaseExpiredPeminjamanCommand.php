@@ -20,7 +20,7 @@ class ReleaseExpiredPeminjamanCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Lepas slot peminjaman yang kadaluarsa 24 jam belum dibayar';
+    protected $description = 'Lepas slot peminjaman kadaluarsa (revisi/pembayaran > 24 jam)';
 
     /**
      * Execute the console command.
@@ -28,7 +28,7 @@ class ReleaseExpiredPeminjamanCommand extends Command
     public function handle(BookingService $bookingService): int
     {
         $expired = Peminjaman::query()
-            ->where('status', Peminjaman::MENUNGGU_PEMBAYARAN)
+            ->whereIn('status', [Peminjaman::MENUNGGU_PEMBAYARAN, Peminjaman::DITOLAK])
             ->whereNotNull('expired_at')
             ->where('expired_at', '<', now())
             ->get();

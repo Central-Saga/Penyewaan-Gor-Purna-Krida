@@ -24,16 +24,11 @@ test('laporan service mengagregasi data pemasukan sesuai transaksi terverifikasi
         'fasilitas_id' => $fasilitas->id,
         'slot_sesi_id' => $slot->id,
         'tanggal' => today()->toDateString(),
-    ]);
-    $file = UploadedFile::fake()->image('bukti.jpg');
-    $pembayaran = app(PaymentService::class)->upload(
-        $peminjaman,
-        $file,
-        'transfer',
-        $pengguna
-    );
+    ], UploadedFile::fake()->create('surat.pdf', 100));
+    app(BookingService::class)->setujuiPengajuan($peminjaman, $pengelola);
 
-    app(PaymentService::class)->verifikasi($pembayaran, true, null, $pengelola);
+    $file = UploadedFile::fake()->image('bukti.jpg');
+    app(PaymentService::class)->upload($peminjaman->fresh(), $file, 'transfer', $pengguna);
 
     $service = app(LaporanService::class);
     $pemasukan = $service->pemasukan(today()->toDateString(), today()->toDateString());
@@ -137,10 +132,11 @@ test('export pdf laporan pemasukan menghasilkan pdf', function () {
         'fasilitas_id' => $fasilitas->id,
         'slot_sesi_id' => $slot->id,
         'tanggal' => today()->toDateString(),
-    ]);
+    ], UploadedFile::fake()->create('surat.pdf', 100));
+    app(BookingService::class)->setujuiPengajuan($peminjaman, $pengelola);
+
     $file = UploadedFile::fake()->image('bukti.jpg');
-    $pembayaran = app(PaymentService::class)->upload($peminjaman, $file, 'transfer', $pengguna);
-    app(PaymentService::class)->verifikasi($pembayaran, true, null, $pengelola);
+    app(PaymentService::class)->upload($peminjaman->fresh(), $file, 'transfer', $pengguna);
 
     $this->actingAs($admin);
 

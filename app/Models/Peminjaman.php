@@ -11,12 +11,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
+use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * State machine peminjaman (WORKFLOWS §B1):
- * menunggu_pembayaran → menunggu_verifikasi → disetujui → selesai
- * dengan cabang pembatalan/pengembalian via BookingService::transisi().
+ * menunggu_verifikasi → (setujui) menunggu_pembayaran → (upload bukti) disetujui → selesai,
+ * dengan cabang menunggu_verifikasi → ditolak → (revisi) menunggu_verifikasi
+ * dan pembatalan via BookingService::transisi().
  *
  * @property int $id
  * @property string $kode
@@ -25,11 +27,12 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property int $slot_sesi_id
  * @property Carbon $tanggal
  * @property string $status
+ * @property string|null $catatan_verifikasi
  * @property Carbon|null $expired_at
  * @property string|null $status_aktif
  */
-#[Fillable(['kode', 'user_id', 'fasilitas_id', 'slot_sesi_id', 'tanggal', 'status', 'expired_at'])]
-class Peminjaman extends Model
+#[Fillable(['kode', 'user_id', 'fasilitas_id', 'slot_sesi_id', 'tanggal', 'status', 'catatan_verifikasi', 'expired_at'])]
+class Peminjaman extends Model implements HasMedia
 {
     /** @use HasFactory<PeminjamanFactory> */
     use HasFactory, InteractsWithMedia, LogsActivity;
@@ -39,6 +42,8 @@ class Peminjaman extends Model
     public const MENUNGGU_VERIFIKASI = 'menunggu_verifikasi';
 
     public const DISETUJUI = 'disetujui';
+
+    public const DITOLAK = 'ditolak';
 
     public const DIBATALKAN = 'dibatalkan';
 
@@ -50,9 +55,10 @@ class Peminjaman extends Model
      * @var list<string>
      */
     public const STATUS_AKTIF = [
-        self::MENUNGGU_PEMBAYARAN,
         self::MENUNGGU_VERIFIKASI,
+        self::DITOLAK,
         self::DISETUJUI,
+        self::MENUNGGU_PEMBAYARAN,
     ];
 
     protected $table = 'peminjaman';
@@ -118,6 +124,9 @@ class Peminjaman extends Model
      */
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('bukti_pembayaran');
+        // Hard Rule 4: surat resmi instansi WAJIB private (disk local, bukan public).
+        $this->addMediaCollection('surat_peminjaman')
+            ->singleFile()
+            ->useDisk('local');
     }
 }

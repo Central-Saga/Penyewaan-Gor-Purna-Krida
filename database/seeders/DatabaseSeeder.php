@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             FasilitasSeeder::class,
             SlotSesiSeeder::class,
+            DemoDataSeeder::class,
         ]);
     }
 }

@@ -3,11 +3,14 @@
 namespace App\Services;
 
 use App\Mail\PeminjamanDibuatMail;
+use App\Mail\PengajuanDisetujuiMail;
+use App\Mail\PengajuanDitolakMail;
 use App\Models\BlokirSlot;
 use App\Models\Peminjaman;
 use App\Models\PeminjamanLog;
 use App\Models\SlotSesi;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
@@ -24,14 +27,18 @@ class BookingService
      * @var array<string, list<string>>
      */
     private const TRANSISI_VALID = [
-        Peminjaman::MENUNGGU_PEMBAYARAN => [
-            Peminjaman::MENUNGGU_VERIFIKASI, // upload bukti
-            Peminjaman::DIBATALKAN, // batal manual / expired
-        ],
         Peminjaman::MENUNGGU_VERIFIKASI => [
-            Peminjaman::DISETUJUI, // verifikasi setuju
-            Peminjaman::MENUNGGU_PEMBAYARAN, // tolak bukti
+            Peminjaman::MENUNGGU_PEMBAYARAN, // pengajuan disetujui pengelola
+            Peminjaman::DITOLAK, // pengajuan perlu revisi
             Peminjaman::DIBATALKAN, // batal
+        ],
+        Peminjaman::DITOLAK => [
+            Peminjaman::MENUNGGU_VERIFIKASI, // pengajuan direvisi & diajukan ulang
+            Peminjaman::DIBATALKAN, // batal / kadaluarsa revisi
+        ],
+        Peminjaman::MENUNGGU_PEMBAYARAN => [
+            Peminjaman::DISETUJUI, // bukti pembayaran diunggah (otomatis)
+            Peminjaman::DIBATALKAN, // batal manual / expired
         ],
         Peminjaman::DISETUJUI => [
             Peminjaman::SELESAI, // tanggal lewat
@@ -39,13 +46,13 @@ class BookingService
     ];
 
     /**
-     * Buat peminjaman baru dengan cek bentrok atomik.
+     * Buat pengajuan peminjaman baru dengan surat resmi + cek bentrok atomik.
      *
      * @param  array{fasilitas_id: int, slot_sesi_id: int, tanggal: string}  $data
      */
-    public function create(User $user, array $data): Peminjaman
+    public function create(User $user, array $data, UploadedFile $surat): Peminjaman
     {
-        $peminjaman = DB::transaction(function () use ($user, $data) {
+        $peminjaman = DB::transaction(function () use ($user, $data, $surat) {
             $slot = SlotSesi::query()
                 ->whereKey($data['slot_sesi_id'])
                 ->where('fasilitas_id', $data['fasilitas_id'])
@@ -90,15 +97,20 @@ class BookingService
                 'fasilitas_id' => $data['fasilitas_id'],
                 'slot_sesi_id' => $data['slot_sesi_id'],
                 'tanggal' => $data['tanggal'],
-                'status' => Peminjaman::MENUNGGU_PEMBAYARAN,
-                'expired_at' => now()->addHours(24),
+                'status' => Peminjaman::MENUNGGU_VERIFIKASI,
+                'expired_at' => null,
             ]);
+
+            // Hard Rule 4: surat resmi instansi disimpan private di disk local.
+            $peminjaman->addMedia($surat->getRealPath())
+                ->usingFileName($surat->hashName())
+                ->toMediaCollection('surat_peminjaman', 'local');
 
             PeminjamanLog::log(
                 $peminjaman,
                 null,
-                Peminjaman::MENUNGGU_PEMBAYARAN,
-                __('Booking dibuat'),
+                Peminjaman::MENUNGGU_VERIFIKASI,
+                __('Pengajuan dibuat dengan surat resmi'),
                 $user,
             );
 
@@ -110,6 +122,128 @@ class BookingService
         Mail::to($user->email)->queue(new PeminjamanDibuatMail($peminjaman));
 
         return $peminjaman;
+    }
+
+    /**
+     * Setujui pengajuan pengelola → penyewa diminta melakukan pembayaran.
+     * Transisi otomatis menetapkan deadline pembayaran 24 jam.
+     */
+    public function setujuiPengajuan(Peminjaman $peminjaman, User $pengelola): void
+    {
+        $this->transisi(
+            $peminjaman,
+            Peminjaman::MENUNGGU_PEMBAYARAN,
+            __('Pengajuan disetujui pengelola'),
+            $pengelola,
+        );
+
+        Mail::to($peminjaman->user->email)->queue(new PengajuanDisetujuiMail($peminjaman->fresh()));
+    }
+
+    /**
+     * Tolak pengajuan → penyewa wajib merevisi (slot tetap terkunci 24 jam).
+     */
+    public function tolakPengajuan(Peminjaman $peminjaman, string $catatan, User $pengelola): void
+    {
+        if (filled($catatan) === false) {
+            throw ValidationException::withMessages([
+                'catatan' => __('Catatan wajib diisi saat menolak pengajuan.'),
+            ]);
+        }
+
+        DB::transaction(function () use ($peminjaman, $catatan, $pengelola) {
+            $peminjaman->update([
+                'catatan_verifikasi' => $catatan,
+                'expired_at' => now()->addHours(24),
+            ]);
+
+            $this->transisi(
+                $peminjaman,
+                Peminjaman::DITOLAK,
+                __('Pengajuan ditolak: :catatan', ['catatan' => $catatan]),
+                $pengelola,
+            );
+        });
+
+        Mail::to($peminjaman->user->email)->queue(new PengajuanDitolakMail($peminjaman->fresh(), $catatan));
+    }
+
+    /**
+     * Ajukan ulang pengajuan yang ditolak dengan jadwal/surat baru.
+     * Fasilitas tidak berubah (ganti fasilitas = batalkan lalu buat pengajuan baru).
+     *
+     * @param  array{slot_sesi_id: int, tanggal: string}  $data
+     */
+    public function revisiPengajuan(Peminjaman $peminjaman, array $data, UploadedFile $surat, User $user): void
+    {
+        DB::transaction(function () use ($peminjaman, $data, $surat, $user) {
+            $peminjaman->refresh();
+
+            if ($peminjaman->status !== Peminjaman::DITOLAK) {
+                throw ValidationException::withMessages([
+                    'status' => __('Peminjaman tidak berstatus perlu revisi.'),
+                ]);
+            }
+
+            $slot = SlotSesi::query()
+                ->whereKey($data['slot_sesi_id'])
+                ->where('fasilitas_id', $peminjaman->fasilitas_id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($slot === null) {
+                throw ValidationException::withMessages([
+                    'slot_sesi_id' => __('Slot tidak ditemukan untuk fasilitas ini.'),
+                ]);
+            }
+
+            // Kecualikan record sendiri agar jadwal yang sama tetap boleh dipertahankan.
+            $bentrok = Peminjaman::query()
+                ->where('fasilitas_id', $peminjaman->fasilitas_id)
+                ->whereDate('tanggal', $data['tanggal'])
+                ->where('slot_sesi_id', $data['slot_sesi_id'])
+                ->where('id', '!=', $peminjaman->id)
+                ->whereIn('status', Peminjaman::STATUS_AKTIF)
+                ->lockForUpdate()
+                ->exists();
+
+            if ($bentrok) {
+                throw ValidationException::withMessages([
+                    'slot_sesi_id' => __('Slot sudah dipesan. Pilih slot atau tanggal lain.'),
+                ]);
+            }
+
+            $diblokir = BlokirSlot::query()
+                ->where('fasilitas_id', $peminjaman->fasilitas_id)
+                ->where('slot_sesi_id', $data['slot_sesi_id'])
+                ->whereDate('tanggal', $data['tanggal'])
+                ->exists();
+
+            if ($diblokir) {
+                throw ValidationException::withMessages([
+                    'slot_sesi_id' => __('Slot diblokir pada tanggal tersebut.'),
+                ]);
+            }
+
+            $peminjaman->update([
+                'slot_sesi_id' => $data['slot_sesi_id'],
+                'tanggal' => $data['tanggal'],
+                'catatan_verifikasi' => null,
+                'expired_at' => null,
+            ]);
+
+            $peminjaman->clearMediaCollection('surat_peminjaman');
+            $peminjaman->addMedia($surat->getRealPath())
+                ->usingFileName($surat->hashName())
+                ->toMediaCollection('surat_peminjaman', 'local');
+
+            $this->transisi(
+                $peminjaman,
+                Peminjaman::MENUNGGU_VERIFIKASI,
+                __('Pengajuan direvisi dan diajukan ulang'),
+                $user,
+            );
+        });
     }
 
     /**

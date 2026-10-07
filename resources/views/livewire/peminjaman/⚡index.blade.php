@@ -27,7 +27,7 @@ new #[Title('Peminjaman')] class extends Component
             abort(403);
         }
 
-        if (! in_array($peminjaman->status, [Peminjaman::MENUNGGU_PEMBAYARAN, Peminjaman::MENUNGGU_VERIFIKASI], true)) {
+        if (! in_array($peminjaman->status, [Peminjaman::MENUNGGU_PEMBAYARAN, Peminjaman::MENUNGGU_VERIFIKASI, Peminjaman::DITOLAK], true)) {
             $this->addError('status', __('Peminjaman pada status ini tidak dapat dibatalkan.'));
 
             return;
@@ -76,9 +76,10 @@ new #[Title('Peminjaman')] class extends Component
 
     <select class="form-select mb-3" style="max-width: 260px;" wire:model.live="status">
         <option value="">{{ __('Semua status') }}</option>
-        <option value="menunggu_pembayaran">{{ __('Menunggu Pembayaran') }}</option>
         <option value="menunggu_verifikasi">{{ __('Menunggu Verifikasi') }}</option>
-        <option value="disetujui">{{ __('Disetujui') }}</option>
+        <option value="ditolak">{{ __('Perlu Revisi') }}</option>
+        <option value="menunggu_pembayaran">{{ __('Menunggu Pembayaran') }}</option>
+        <option value="disetujui">{{ __('Tersewa') }}</option>
         <option value="dibatalkan">{{ __('Dibatalkan') }}</option>
         <option value="selesai">{{ __('Selesai') }}</option>
     </select>
@@ -108,20 +109,38 @@ new #[Title('Peminjaman')] class extends Component
                         <td>{{ $peminjaman->fasilitas->nama }}</td>
                         <td>{{ $peminjaman->slotSesi->nama }}</td>
                         <td>{{ $peminjaman->tanggal->translatedFormat('d M Y') }}</td>
-                        <td><x-status-badge :status="$peminjaman->status" /></td>
+                        <td>
+                            <x-status-badge :status="$peminjaman->status" />
+                            @if ($peminjaman->status === Peminjaman::DITOLAK && filled($peminjaman->catatan_verifikasi))
+                                <div class="small text-danger mt-1">{{ \Illuminate\Support\Str::limit($peminjaman->catatan_verifikasi, 80) }}</div>
+                            @endif
+                        </td>
                         <td class="text-end">
-                            @if (in_array($peminjaman->status, [Peminjaman::MENUNGGU_PEMBAYARAN, Peminjaman::MENUNGGU_VERIFIKASI], true))
-                                @role('pengguna')
+                            @role('pengguna')
+                                @if ($peminjaman->status === Peminjaman::DITOLAK)
+                                    @if ($peminjaman->user_id === auth()->id())
+                                        <a href="{{ route('peminjaman.revisi', $peminjaman) }}"
+                                           class="btn btn-sm btn-warning">{{ __('Revisi') }}</a>
+                                        <button wire:click="batalkan({{ $peminjaman->id }})"
+                                                wire:confirm="{{ __('Batalkan peminjaman ini?') }}"
+                                                class="btn btn-sm btn-outline-danger">{{ __('Batalkan') }}</button>
+                                    @endif
+                                @elseif ($peminjaman->status === Peminjaman::MENUNGGU_PEMBAYARAN)
                                     <a href="{{ route('pembayaran.show', $peminjaman) }}"
                                        class="btn btn-sm btn-outline-primary">{{ __('Bayar') }}</a>
-
                                     @if ($peminjaman->user_id === auth()->id())
                                         <button wire:click="batalkan({{ $peminjaman->id }})"
                                                 wire:confirm="{{ __('Batalkan peminjaman ini?') }}"
                                                 class="btn btn-sm btn-outline-danger">{{ __('Batalkan') }}</button>
                                     @endif
-                                @endrole
-                            @endif
+                                @elseif ($peminjaman->status === Peminjaman::MENUNGGU_VERIFIKASI)
+                                    @if ($peminjaman->user_id === auth()->id())
+                                        <button wire:click="batalkan({{ $peminjaman->id }})"
+                                                wire:confirm="{{ __('Batalkan peminjaman ini?') }}"
+                                                class="btn btn-sm btn-outline-danger">{{ __('Batalkan') }}</button>
+                                    @endif
+                                @endif
+                            @endrole
                         </td>
                     </tr>
                 @empty

@@ -33,7 +33,7 @@ new #[Title('Pembayaran')] class extends Component
 
         $paymentService->upload($this->peminjaman, $this->bukti, $this->metode, $user);
 
-        session()->flash('status', __('Bukti pembayaran terkirim. Menunggu verifikasi pengelola.'));
+        session()->flash('status', __('Bukti pembayaran terkirim. Penyewaan berhasil — jadwal tersewa.'));
 
         return $this->redirectRoute('peminjaman.index', navigate: true);
     }
@@ -82,7 +82,7 @@ new #[Title('Pembayaran')] class extends Component
                     <div class="card-body">
                         <h6 class="card-title h6">{{ __('Instruksi Pembayaran') }}</h6>
                         <p class="small text-secondary mb-2">
-                            {{ __('Transfer ke rekening berikut atau pindai QRIS, lalu unggah bukti:') }}
+                            {{ __('Transfer ke rekening berikut atau pindai QRIS, unggah bukti — penyewaan akan otomatis dikonfirmasi tanpa verifikasi manual:') }}
                         </p>
                         <div class="border rounded p-3 mb-3 small">
                             <div><strong>{{ config('gor.rekening.bank') }}</strong></div>

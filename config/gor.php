@@ -18,4 +18,16 @@ return [
         'atas_nama' => 'Penerimaan Sewa GOR DISDIKPORA Badung',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Template Surat Peminjaman Resmi
+    |--------------------------------------------------------------------------
+    |
+    | Sumber kebenaran tunggal path unduhan template surat resmi (docx).
+    | File publik di public/ sehingga dapat diunduh tanpa login.
+    |
+    */
+
+    'template_surat' => 'templates/template-surat-peminjaman.docx',
+
 ];

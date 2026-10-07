@@ -24,18 +24,31 @@ class PeminjamanFactory extends Factory
             'fasilitas_id' => Fasilitas::factory(),
             'slot_sesi_id' => SlotSesi::factory(),
             'tanggal' => today()->addDay()->toDateString(),
-            'status' => Peminjaman::MENUNGGU_PEMBAYARAN,
-            'expired_at' => now()->addHours(24),
+            'status' => Peminjaman::MENUNGGU_VERIFIKASI,
+            'expired_at' => null,
         ];
     }
 
     /**
-     * Status menunggu verifikasi.
+     * Status menunggu pembayaran (pengajuan disetujui pengelola).
      */
-    public function menungguVerifikasi(): static
+    public function menungguPembayaran(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => Peminjaman::MENUNGGU_VERIFIKASI,
+            'status' => Peminjaman::MENUNGGU_PEMBAYARAN,
+            'expired_at' => now()->addHours(24),
+        ]);
+    }
+
+    /**
+     * Status ditolak / perlu revisi (slot tetap terkunci).
+     */
+    public function ditolak(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => Peminjaman::DITOLAK,
+            'catatan_verifikasi' => 'Surat belum ditandatangani, mohon revisi.',
+            'expired_at' => now()->addHours(24),
         ]);
     }
 

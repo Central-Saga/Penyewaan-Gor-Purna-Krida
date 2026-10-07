@@ -153,9 +153,9 @@
                             <div class="step-number">1</div>
                             <i class="bi bi-calendar-event fs-2 text-primary"></i>
                         </div>
-                        <h5 class="fw-bold text-dark mb-2">{{ __('Pilih Fasilitas & Jadwal') }}</h5>
+                        <h5 class="fw-bold text-dark mb-2">{{ __('Pilih Jadwal & Siapkan Surat') }}</h5>
                         <p class="text-secondary small mb-0 lh-base">
-                            {{ __('Telusuri lapangan yang ingin disewa, lihat slot sesi kosong pada kalender jadwal, lalu pilih waktu yang sesuai.') }}
+                            {{ __('Unduh template surat resmi, cek slot sesi kosong pada kalender jadwal, lalu pilih waktu yang sesuai.') }}
                         </p>
                     </div>
                 </div>
@@ -166,9 +166,9 @@
                             <div class="step-number">2</div>
                             <i class="bi bi-receipt-cutoff fs-2 text-primary"></i>
                         </div>
-                        <h5 class="fw-bold text-dark mb-2">{{ __('Ajukan & Bayar') }}</h5>
+                        <h5 class="fw-bold text-dark mb-2">{{ __('Ajukan & Verifikasi Pengelola') }}</h5>
                         <p class="text-secondary small mb-0 lh-base">
-                            {{ __('Isi data peminjaman, lakukan transfer pembayaran tarif sewa resmi, dan unggah foto bukti transfer.') }}
+                            {{ __('Unggah surat resmi bersama pengajuan. Pengelola memverifikasi surat serta jadwal yang Anda ajukan.') }}
                         </p>
                     </div>
                 </div>
@@ -179,9 +179,9 @@
                             <div class="step-number">3</div>
                             <i class="bi bi-check2-circle fs-2 text-success"></i>
                         </div>
-                        <h5 class="fw-bold text-dark mb-2">{{ __('Verifikasi & Main') }}</h5>
+                        <h5 class="fw-bold text-dark mb-2">{{ __('Bayar & Jadwal Tersewa') }}</h5>
                         <p class="text-secondary small mb-0 lh-base">
-                            {{ __('Pengelola memverifikasi bukti bayar. Jadwal resmi terkunci untuk Anda dan siap digunakan tepat waktu.') }}
+                            {{ __('Setelah disetujui, bayar dan unggah bukti transfer. Penyewaan otomatis berhasil dan jadwal resmi tersewa.') }}
                         </p>
                     </div>
                 </div>

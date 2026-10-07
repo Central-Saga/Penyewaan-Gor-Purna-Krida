@@ -22,6 +22,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property int $kapasitas
  * @property int $tarif_per_sesi
  * @property bool $status_aktif
+ * @property int|null $total_peminjaman
+ * @property int|null $peminjaman_aktif
+ * @property int|float $pendapatan_terverifikasi
  */
 #[Fillable(['nama', 'jenis', 'deskripsi', 'kapasitas', 'tarif_per_sesi', 'status_aktif'])]
 class Fasilitas extends Model implements HasMedia

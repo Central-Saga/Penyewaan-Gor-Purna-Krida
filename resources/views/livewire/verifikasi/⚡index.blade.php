@@ -4,10 +4,9 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Peminjaman;
-use App\Models\Pembayaran;
-use App\Services\PaymentService;
+use App\Services\BookingService;
 
-new #[Title('Verifikasi Pembayaran')] class extends Component
+new #[Title('Verifikasi Pengajuan')] class extends Component
 {
     use WithPagination;
 
@@ -18,27 +17,22 @@ new #[Title('Verifikasi Pembayaran')] class extends Component
     public function detail(int $id): void
     {
         $this->detailId = $this->detailId === $id ? null : $id;
-        $this->reset('catatan');
+        $this->catatan = '';
     }
 
-    public function setujui(PaymentService $paymentService, int $pembayaranId): void
+    public function setujui(BookingService $bookingService, int $id): void
     {
         if (! auth()->user()?->hasAnyRole(['admin', 'pengelola'])) {
             abort(403);
         }
 
-        $paymentService->verifikasi(
-            Pembayaran::findOrFail($pembayaranId),
-            true,
-            null,
-            auth()->user(),
-        );
+        $bookingService->setujuiPengajuan(Peminjaman::findOrFail($id), auth()->user());
 
-        session()->flash('status', __('Pembayaran disetujui.'));
-        $this->reset('detailId', 'catatan');
+        $this->detailId = null;
+        session()->flash('status', __('Pengajuan disetujui. Penyewa diminta melakukan pembayaran.'));
     }
 
-    public function tolak(PaymentService $paymentService, int $pembayaranId): void
+    public function tolak(BookingService $bookingService, int $id): void
     {
         if (! auth()->user()?->hasAnyRole(['admin', 'pengelola'])) {
             abort(403);
@@ -46,25 +40,44 @@ new #[Title('Verifikasi Pembayaran')] class extends Component
 
         $this->validate([
             'catatan' => ['required', 'string', 'max:255'],
+        ], attributes: [
+            'catatan' => __('catatan penolakan'),
         ]);
 
-        $paymentService->verifikasi(
-            Pembayaran::findOrFail($pembayaranId),
-            false,
-            $this->catatan,
+        $bookingService->tolakPengajuan(Peminjaman::findOrFail($id), $this->catatan, auth()->user());
+
+        $this->detailId = null;
+        $this->catatan = '';
+        session()->flash('status', __('Pengajuan ditolak. Pesan revisi dikirim ke penyewa.'));
+    }
+
+    public function batalkan(BookingService $bookingService, int $id): void
+    {
+        if (! auth()->user()?->hasAnyRole(['admin', 'pengelola'])) {
+            abort(403);
+        }
+
+        $bookingService->transisi(
+            Peminjaman::findOrFail($id),
+            Peminjaman::DIBATALKAN,
+            __('Dibatalkan oleh pengelola'),
             auth()->user(),
         );
 
-        session()->flash('status', __('Pembayaran ditolak.'));
-        $this->reset('detailId', 'catatan');
+        $this->detailId = null;
+        session()->flash('status', __('Pengajuan dibatalkan. Slot dilepas.'));
     }
 
     public function render()
     {
+        if (! auth()->user()?->hasAnyRole(['admin', 'pengelola'])) {
+            abort(403);
+        }
+
         return $this->view([
-            'daftarPembayaran' => Pembayaran::query()
-                ->where('status', Pembayaran::MENUNGGU_VERIFIKASI)
-                ->with(['peminjaman.user', 'peminjaman.fasilitas', 'peminjaman.slotSesi'])
+            'daftarPengajuan' => Peminjaman::query()
+                ->where('status', Peminjaman::MENUNGGU_VERIFIKASI)
+                ->with(['user', 'fasilitas', 'slotSesi'])
                 ->orderBy('created_at')
                 ->paginate(15),
         ])->layout('layouts.app');
@@ -72,7 +85,10 @@ new #[Title('Verifikasi Pembayaran')] class extends Component
 }; ?>
 
 <div>
-    <h1 class="h4 fw-bold mb-4">{{ __('Verifikasi Pembayaran') }}</h1>
+    <div class="mb-4">
+        <h1 class="h4 fw-bold mb-1">{{ __('Verifikasi Pengajuan Peminjaman') }}</h1>
+        <p class="text-secondary mb-0">{{ __('Periksa surat resmi serta jadwal/sesi yang diajukan penyewa.') }}</p>
+    </div>
 
     @if (session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
@@ -87,56 +103,77 @@ new #[Title('Verifikasi Pembayaran')] class extends Component
                     <th scope="col">{{ __('Penyewa') }}</th>
                     <th scope="col">{{ __('Fasilitas') }}</th>
                     <th scope="col">{{ __('Tanggal') }}</th>
-                    <th scope="col">{{ __('Nominal') }}</th>
-                    <th scope="col">{{ __('Metode') }}</th>
+                    <th scope="col">{{ __('Sesi') }}</th>
                     <th scope="col" class="text-end">{{ __('Aksi') }}</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse ($daftarPembayaran as $bayar)
-                    <tr wire:key="bayar-{{ $bayar->id }}">
-                        <td class="fw-semibold">{{ $bayar->peminjaman->kode }}</td>
-                        <td>{{ $bayar->peminjaman->user->name }}</td>
-                        <td>{{ $bayar->peminjaman->fasilitas->nama }}</td>
-                        <td>{{ $bayar->peminjaman->tanggal->translatedFormat('d M Y') }}</td>
-                        <td>Rp {{ number_format($bayar->nominal, 0, ',', '.') }}</td>
-                        <td>{{ ucfirst($bayar->metode) }}</td>
+                @forelse ($daftarPengajuan as $pengajuan)
+                    <tr wire:key="pengajuan-{{ $pengajuan->id }}">
+                        <td class="fw-semibold">{{ $pengajuan->kode }}</td>
+                        <td>{{ $pengajuan->user->name }}</td>
+                        <td>{{ $pengajuan->fasilitas->nama }}</td>
+                        <td>{{ $pengajuan->tanggal->translatedFormat('d M Y') }}</td>
+                        <td class="small">
+                            {{ $pengajuan->slotSesi->nama }}<br>
+                            <span class="text-secondary">({{ substr($pengajuan->slotSesi->jam_mulai, 0, 5) }} - {{ substr($pengajuan->slotSesi->jam_selesai, 0, 5) }} WITA)</span>
+                        </td>
                         <td class="text-end">
-                            <button wire:click="detail({{ $bayar->id }})" class="btn btn-sm btn-outline-primary">
-                                {{ $detailId === $bayar->id ? __('Tutup') : __('Detail') }}
+                            <button wire:click="detail({{ $pengajuan->id }})" class="btn btn-sm btn-outline-primary">
+                                {{ $detailId === $pengajuan->id ? __('Tutup') : __('Detail') }}
                             </button>
                         </td>
                     </tr>
-                    @if ($detailId === $bayar->id)
-                        <tr wire:key="detail-{{ $bayar->id }}">
-                            <td colspan="7" class="bg-light">
+                    @if ($detailId === $pengajuan->id)
+                        <tr wire:key="detail-{{ $pengajuan->id }}">
+                            <td colspan="6" class="bg-light">
                                 <div class="row g-3 p-2">
                                     <div class="col-md-5">
-                                        <h6 class="small text-uppercase text-secondary">{{ __('Bukti Pembayaran') }}</h6>
-                                        @php $media = $bayar->getFirstMedia('bukti'); @endphp
-                                        @if ($media)
-                                            <img src="{{ route('bukti.show', $bayar) }}" alt="{{ __('Bukti pembayaran') }}"
-                                                 class="img-fluid border rounded" style="max-height: 320px;">
+                                        <h6 class="small text-uppercase text-secondary">{{ __('Surat Peminjaman') }}</h6>
+                                        @if ($pengajuan->getFirstMedia('surat_peminjaman'))
+                                            <a href="{{ route('surat.show', $pengajuan) }}" target="_blank"
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-file-earmark-arrow-down me-1"></i> {{ __('Lihat / Unduh Surat') }}
+                                            </a>
                                         @else
-                                            <div class="alert alert-light border small mb-0">{{ __('Bukti tidak tersedia.') }}</div>
+                                            <div class="alert alert-warning border-0 rounded-3 small mb-0">
+                                                {{ __('Surat tidak tersedia.') }}
+                                            </div>
                                         @endif
+
+                                        <div class="small text-secondary mt-3">
+                                            <div><strong>{{ __('Penyewa') }}:</strong> {{ $pengajuan->user->name }}</div>
+                                            <div><strong>{{ __('Kontak') }}:</strong> {{ $pengajuan->user->no_hp ?? $pengajuan->user->email }}</div>
+                                            <div><strong>{{ __('Diajukan') }}:</strong> {{ $pengajuan->created_at->translatedFormat('d M Y H:i') }}</div>
+                                        </div>
                                     </div>
                                     <div class="col-md-7">
                                         <h6 class="small text-uppercase text-secondary">{{ __('Keputusan') }}</h6>
                                         <div class="mb-3">
-                                            <label class="form-label" for="catatan-{{ $bayar->id }}">
-                                                {{ __('Catatan (wajib jika menolak)') }}
+                                            <label class="form-label small fw-semibold" for="catatan-{{ $pengajuan->id }}">
+                                                {{ __('Catatan penolakan (wajib jika menolak)') }}
                                             </label>
-                                            <textarea id="catatan-{{ $bayar->id }}" class="form-control" rows="2"
-                                                      wire:model="catatan"></textarea>
+                                            <textarea id="catatan-{{ $pengajuan->id }}" class="form-control" rows="2"
+                                                      wire:model="catatan"
+                                                      placeholder="{{ __('Contoh: Surat belum bertanda tangan, mohon revisi.') }}"></textarea>
+                                            @error('catatan')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                                         </div>
-                                        <div class="d-flex gap-2">
-                                            <button wire:click="setujui({{ $bayar->id }})"
-                                                    wire:confirm="{{ __('Setujui pembayaran ini?') }}"
-                                                    class="btn btn-success btn-sm">{{ __('Setujui') }}</button>
-                                            <button wire:click="tolak({{ $bayar->id }})"
-                                                    wire:confirm="{{ __('Tolak pembayaran ini?') }}"
-                                                    class="btn btn-danger btn-sm">{{ __('Tolak') }}</button>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <button wire:click="setujui({{ $pengajuan->id }})"
+                                                    wire:confirm="{{ __('Setujui pengajuan ini?') }}"
+                                                    class="btn btn-success btn-sm">
+                                                <i class="bi bi-check2-circle me-1"></i> {{ __('Setujui') }}
+                                            </button>
+                                            <button wire:click="tolak({{ $pengajuan->id }})"
+                                                    wire:confirm="{{ __('Tolak pengajuan ini? Penyewa diminta merevisi.') }}"
+                                                    class="btn btn-danger btn-sm">
+                                                <i class="bi bi-x-circle me-1"></i> {{ __('Tolak') }}
+                                            </button>
+                                            <button wire:click="batalkan({{ $pengajuan->id }})"
+                                                    wire:confirm="{{ __('Batalkan pengajuan ini? Slot akan dilepas.') }}"
+                                                    class="btn btn-outline-danger btn-sm">
+                                                {{ __('Batalkan') }}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -144,11 +181,11 @@ new #[Title('Verifikasi Pembayaran')] class extends Component
                         </tr>
                     @endif
                 @empty
-                    <tr><td colspan="7" class="text-center text-secondary py-4">{{ __('Tidak ada pembayaran menunggu verifikasi.') }}</td></tr>
+                    <tr><td colspan="6" class="text-center text-secondary py-4">{{ __('Tidak ada pengajuan yang menunggu verifikasi.') }}</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    {{ $daftarPembayaran->links() }}
+    {{ $daftarPengajuan->links() }}
 </div>

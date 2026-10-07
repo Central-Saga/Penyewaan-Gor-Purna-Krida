@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PembayaranDitolakMail extends Mailable implements ShouldQueue
+class PengajuanDitolakMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -26,7 +26,7 @@ class PembayaranDitolakMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '['.$this->peminjaman->kode.'] Bukti Pembayaran Ditolak — GOR Purnakrida',
+            subject: '['.$this->peminjaman->kode.'] Pengajuan Perlu Revisi',
         );
     }
 
@@ -36,11 +36,11 @@ class PembayaranDitolakMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.pembayaran-ditolak',
+            view: 'emails.pengajuan-ditolak',
             with: [
                 'peminjaman' => $this->peminjaman,
                 'catatan' => $this->catatan,
-                'urlPembayaran' => route('pembayaran.show', $this->peminjaman),
+                'urlRevisi' => route('peminjaman.revisi', $this->peminjaman),
             ],
         );
     }

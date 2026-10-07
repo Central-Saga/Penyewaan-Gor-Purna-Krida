@@ -38,7 +38,7 @@
                 <input id="no_hp" name="no_hp" type="tel" class="form-control border-start-0 ps-1 @error('no_hp') is-invalid @enderror"
                        value="{{ old('no_hp') }}" autocomplete="tel" placeholder="08123456789">
             </div>
-            <div class="form-text text-muted" style="font-size: 0.75rem;">Digunakan untuk konfirmasi jadwal & verifikasi pembayaran.</div>
+            <div class="form-text text-muted" style="font-size: 0.75rem;">Digunakan untuk konfirmasi jadwal & verifikasi pengajuan sewa.</div>
             @error('no_hp')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
 

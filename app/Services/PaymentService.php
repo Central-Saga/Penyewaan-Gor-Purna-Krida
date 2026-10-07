@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Mail\PembayaranDitolakMail;
 use App\Mail\PembayaranDiverifikasiMail;
 use App\Models\Pembayaran;
 use App\Models\Peminjaman;
@@ -14,7 +13,9 @@ use Illuminate\Validation\ValidationException;
 class PaymentService
 {
     /**
-     * Simpan bukti pembayaran dan naikkan peminjaman ke menunggu_verifikasi.
+     * Simpan bukti pembayaran dan konfirmasi penyewaan secara OTOMATIS.
+     * Tidak ada verifikasi manual: pembayaran langsung terverifikasi dan
+     * peminjaman berstatus disetujui (jadwal tersewa).
      */
     public function upload(Peminjaman $peminjaman, UploadedFile $bukti, string $metode, ?User $aktor = null): Pembayaran
     {
@@ -24,12 +25,14 @@ class PaymentService
             ]);
         }
 
-        return \DB::transaction(function () use ($peminjaman, $bukti, $metode, $aktor) {
+        $pembayaran = \DB::transaction(function () use ($peminjaman, $bukti, $metode, $aktor) {
             $pembayaran = Pembayaran::create([
                 'peminjaman_id' => $peminjaman->id,
                 'nominal' => $peminjaman->fasilitas->tarif_per_sesi,
                 'metode' => $metode,
-                'status' => Pembayaran::MENUNGGU_VERIFIKASI,
+                'status' => Pembayaran::TERVERIFIKASI,
+                'verified_at' => now(),
+                'diverifikasi_oleh' => null, // sistem otomatis, bukan verifikator manusia
             ]);
 
             $pembayaran->addMedia($bukti->getRealPath())
@@ -38,80 +41,17 @@ class PaymentService
 
             app(BookingService::class)->transisi(
                 $peminjaman,
-                Peminjaman::MENUNGGU_VERIFIKASI,
-                __('Bukti pembayaran diunggah (:metode)', ['metode' => $metode]),
+                Peminjaman::DISETUJUI,
+                __('Bukti pembayaran diunggah (:metode) — penyewaan otomatis dikonfirmasi', ['metode' => $metode]),
                 $aktor,
             );
 
             return $pembayaran;
         });
-    }
-
-    /**
-     * Verifikasi pembayaran oleh pengelola/admin.
-     * Setuju → peminjaman disetujui. Tolak → kembali ke menunggu_pembayaran,
-     * bukti lama soft delete.
-     */
-    public function verifikasi(Pembayaran $pembayaran, bool $setuju, ?string $catatan, User $verifikator): void
-    {
-        \DB::transaction(function () use ($pembayaran, $setuju, $catatan, $verifikator) {
-            $peminjaman = $pembayaran->peminjaman;
-
-            if ($peminjaman->status !== Peminjaman::MENUNGGU_VERIFIKASI) {
-                throw ValidationException::withMessages([
-                    'status' => __('Peminjaman tidak sedang menunggu verifikasi.'),
-                ]);
-            }
-
-            if ($setuju) {
-                $pembayaran->update([
-                    'status' => Pembayaran::TERVERIFIKASI,
-                    'verified_at' => now(),
-                    'diverifikasi_oleh' => $verifikator->id,
-                ]);
-
-                app(BookingService::class)->transisi(
-                    $pembayaran->peminjaman,
-                    Peminjaman::DISETUJUI,
-                    __('Pembayaran disetujui'),
-                    $verifikator,
-                );
-
-                return;
-            }
-
-            if (filled($catatan) === false) {
-                throw ValidationException::withMessages([
-                    'catatan_verifikasi' => __('Catatan wajib diisi saat menolak pembayaran.'),
-                ]);
-            }
-
-            $pembayaran->update([
-                'status' => Pembayaran::DITOLAK,
-                'catatan_verifikasi' => $catatan,
-                'diverifikasi_oleh' => $verifikator->id,
-                'verified_at' => now(),
-            ]);
-
-            $pembayaran->delete(); // soft delete bukti lama
-
-            app(BookingService::class)->transisi(
-                $pembayaran->peminjaman,
-                Peminjaman::MENUNGGU_PEMBAYARAN,
-                __('Bukti ditolak: :catatan', ['catatan' => $catatan]),
-                $verifikator,
-            );
-        });
 
         // Notifikasi email di-queue setelah transaksi DB commit (driver log di dev).
-        $peminjaman = $pembayaran->peminjaman->refresh();
+        Mail::to($peminjaman->user->email)->queue(new PembayaranDiverifikasiMail($peminjaman->fresh()));
 
-        if ($setuju) {
-            Mail::to($peminjaman->user->email)->queue(new PembayaranDiverifikasiMail($peminjaman));
-
-            return;
-        }
-
-        Mail::to($peminjaman->user->email)->queue(new PembayaranDitolakMail($peminjaman, (string) $catatan));
+        return $pembayaran;
     }
 }

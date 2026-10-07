@@ -8,8 +8,14 @@ use App\Models\PeminjamanLog;
 use App\Models\SlotSesi;
 use App\Models\User;
 use App\Services\BookingService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+
+beforeEach(function () {
+    Storage::fake('local');
+});
 
 test('peminjaman dibuat mengirim email notifikasi ke pengguna', function () {
     Mail::fake();
@@ -22,7 +28,7 @@ test('peminjaman dibuat mengirim email notifikasi ke pengguna', function () {
         'fasilitas_id' => $fasilitas->id,
         'slot_sesi_id' => $slot->id,
         'tanggal' => today()->addDays(3)->toDateString(),
-    ]);
+    ], UploadedFile::fake()->create('surat.pdf', 100));
 
     Mail::assertQueued(PeminjamanDibuatMail::class, function (PeminjamanDibuatMail $mail) use ($peminjaman, $user): bool {
         return $mail->peminjaman->is($peminjaman) && $mail->hasTo($user->email);
@@ -49,9 +55,9 @@ test('test_dua_booking_slot_sama_yang_kedua_ditolak', function () {
         'fasilitas_id' => $fasilitas->id,
         'slot_sesi_id' => $slot->id,
         'tanggal' => $tanggal,
-    ]);
+    ], UploadedFile::fake()->create('surat.pdf', 100));
 
-    expect($pertama->status)->toBe(Peminjaman::MENUNGGU_PEMBAYARAN);
+    expect($pertama->status)->toBe(Peminjaman::MENUNGGU_VERIFIKASI);
 
     // Booking kedua pada slot sama ditolak.
     try {
@@ -59,7 +65,7 @@ test('test_dua_booking_slot_sama_yang_kedua_ditolak', function () {
             'fasilitas_id' => $fasilitas->id,
             'slot_sesi_id' => $slot->id,
             'tanggal' => $tanggal,
-        ]);
+        ], UploadedFile::fake()->create('surat.pdf', 100));
 
         $this->fail('Booking kedua seharusnya ditolak.');
     } catch (ValidationException $e) {
@@ -93,7 +99,7 @@ test('test_booking_pada_slot_diblokir_ditolak', function () {
             'fasilitas_id' => $fasilitas->id,
             'slot_sesi_id' => $slot->id,
             'tanggal' => $tanggal,
-        ]);
+        ], UploadedFile::fake()->create('surat.pdf', 100));
 
         $this->fail('Booking pada slot diblokir seharusnya ditolak.');
     } catch (ValidationException $e) {
@@ -114,7 +120,7 @@ test('test_booking_dibatalkan_melepas_slot', function () {
         'fasilitas_id' => $fasilitas->id,
         'slot_sesi_id' => $slot->id,
         'tanggal' => $tanggal,
-    ]);
+    ], UploadedFile::fake()->create('surat.pdf', 100));
 
     // Batal → generated column NULL → slot lepas.
     $service->transisi($peminjaman, Peminjaman::DIBATALKAN, 'Batal manual', $user);
@@ -128,7 +134,7 @@ test('test_booking_dibatalkan_melepas_slot', function () {
         'fasilitas_id' => $fasilitas->id,
         'slot_sesi_id' => $slot->id,
         'tanggal' => $tanggal,
-    ]);
+    ], UploadedFile::fake()->create('surat.pdf', 100));
 
     expect($kedua->id)->not->toBe($peminjaman->id);
 });
@@ -151,6 +157,7 @@ test('test_transisi_invalid_ditolak', function () {
 test('test_log_tercatat_setiap_transisi', function () {
     $service = app(BookingService::class);
     $user = User::factory()->create();
+    $pengelola = User::factory()->pengelola()->create();
 
     $fasilitas = Fasilitas::factory()->create();
     $slot = SlotSesi::factory()->for($fasilitas)->create();
@@ -159,13 +166,13 @@ test('test_log_tercatat_setiap_transisi', function () {
         'fasilitas_id' => $fasilitas->id,
         'slot_sesi_id' => $slot->id,
         'tanggal' => today()->addDay()->toDateString(),
-    ]);
+    ], UploadedFile::fake()->create('surat.pdf', 100));
 
-    $service->transisi($peminjaman, Peminjaman::MENUNGGU_VERIFIKASI, 'Upload bukti', $user);
+    $service->setujuiPengajuan($peminjaman, $pengelola);
 
     expect(PeminjamanLog::where('peminjaman_id', $peminjaman->id)->count())->toBe(2);
     expect(PeminjamanLog::where('peminjaman_id', $peminjaman->id)->latest('id')->first()->ke_status)
-        ->toBe(Peminjaman::MENUNGGU_VERIFIKASI);
+        ->toBe(Peminjaman::MENUNGGU_PEMBAYARAN);
 });
 
 test('test_kode_peminjaman_format_gor_yyyymmdd_xxxx', function () {
@@ -180,8 +187,36 @@ test('test_kode_peminjaman_format_gor_yyyymmdd_xxxx', function () {
         'fasilitas_id' => $fasilitas->id,
         'slot_sesi_id' => $slot->id,
         'tanggal' => $tanggal,
-    ]);
+    ], UploadedFile::fake()->create('surat.pdf', 100));
 
     expect($peminjaman->kode)->toMatch('/^GOR-\d{8}-\d{4}$/');
-    expect($peminjaman->expired_at)->not->toBeNull();
+    // Pengajuan menunggu verifikasi pengelola tanpa deadline otomatis.
+    expect($peminjaman->expired_at)->toBeNull();
+});
+
+test('halaman sewa fasilitas menampilkan tombol tata cara dan unduh template surat', function () {
+    $pengguna = User::factory()->pengguna()->create();
+    Fasilitas::factory()->create();
+
+    $this->actingAs($pengguna)
+        ->get(route('jadwal.index'))
+        ->assertOk()
+        ->assertSee('Tata Cara Menyewa')
+        ->assertSee('Unduh Template Surat')
+        ->assertSee('template-surat-peminjaman.docx');
+});
+
+test('panduan menampilkan 9 langkah tata cara dan catatan kalimat dalam kurung', function () {
+    $this->get(route('panduan'))
+        ->assertOk()
+        ->assertSee('Pilih Fasilitas')
+        ->assertSee('Pilih Tanggal Sewa')
+        ->assertSee('Unduh Template Surat')
+        ->assertSee('Siapkan dan Unggah Surat')
+        ->assertSee('Ajukan Jadwal Sewa')
+        ->assertSee('Menunggu Verifikasi')
+        ->assertSee('Lakukan Pembayaran')
+        ->assertSee('Unggah Bukti Pembayaran')
+        ->assertSee('Penyewaan Berhasil')
+        ->assertSee('tanda kurung', false);
 });

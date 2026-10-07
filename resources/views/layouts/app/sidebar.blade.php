@@ -50,14 +50,18 @@
                             <i class="bi bi-receipt"></i>
                             <span>{{ __('Peminjaman Saya') }}</span>
                         </a>
+                        <a class="app-nav-link" href="{{ route('panduan') }}" target="_blank">
+                            <i class="bi bi-file-earmark-arrow-down"></i>
+                            <span>{{ __('Template Surat & Panduan') }}</span>
+                        </a>
                     @endrole
 
-                    @hasrole('pengelola')
+                    @hasanyrole('pengelola|admin')
                         <div class="app-sidebar-section mt-3">{{ __('Operasional') }}</div>
                         <a class="app-nav-link {{ request()->routeIs('verifikasi.*') ? 'active' : '' }}"
                            href="{{ route('verifikasi.index') }}" wire:navigate>
                             <i class="bi bi-shield-check"></i>
-                            <span>{{ __('Verifikasi Pembayaran') }}</span>
+                            <span>{{ __('Verifikasi Pengajuan') }}</span>
                         </a>
                         <a class="app-nav-link {{ request()->routeIs('transaksi.*') ? 'active' : '' }}"
                            href="{{ route('transaksi.index') }}" wire:navigate>
@@ -74,13 +78,13 @@
                            href="{{ route('panel.slot-sesi.index') }}" wire:navigate>
                             <i class="bi bi-clock-history"></i>
                             <span>{{ __('Slot & Blokir Jadwal') }}</span>
+                        </a>
                         <a class="app-nav-link {{ request()->routeIs('activity.logs.*') ? 'active' : '' }}"
                            href="{{ route('activity.logs.index') }}" wire:navigate>
                             <i class="bi bi-clock-history"></i>
                             <span>{{ __('Log Aktivitas') }}</span>
                         </a>
-                        </a>
-                    @endhasrole
+                    @endhasanyrole
 
                     @role('admin')
                         <div class="app-sidebar-section mt-3">{{ __('Administrasi') }}</div>
@@ -89,10 +93,10 @@
                             <i class="bi bi-people"></i>
                             <span>{{ __('Kelola Pengguna') }}</span>
                         </a>
-                        <a class="app-nav-link {{ request()->routeIs('transaksi.*') ? 'active' : '' }}"
-                           href="{{ route('transaksi.index') }}" wire:navigate>
-                            <i class="bi bi-credit-card-2-front"></i>
-                            <span>{{ __('Data Transaksi') }}</span>
+                        <a class="app-nav-link {{ request()->routeIs('panel.role.*') ? 'active' : '' }}"
+                           href="{{ route('panel.role.index') }}" wire:navigate>
+                            <i class="bi bi-shield-lock"></i>
+                            <span>{{ __('Role & Permission') }}</span>
                         </a>
                         <a class="app-nav-link {{ request()->routeIs('laporan.*') ? 'active' : '' }}"
                            href="{{ route('laporan.index') }}" wire:navigate>

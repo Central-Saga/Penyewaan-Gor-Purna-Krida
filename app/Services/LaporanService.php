@@ -11,6 +11,8 @@ class LaporanService
 {
     /**
      * Get per-facility statistics including total bookings, active bookings, and verified income.
+     *
+     * @return Collection<int, Fasilitas>
      */
     public function statistikFasilitas(?string $mulai = null, ?string $sampai = null): Collection
     {
@@ -35,7 +37,7 @@ class LaporanService
             ->with(['media'])
             ->orderBy('nama')
             ->get()
-            ->map(function ($facility) use ($mulai, $sampai) {
+            ->map(function (Fasilitas $facility) use ($mulai, $sampai): Fasilitas {
                 // Calculate verified income for this facility
                 $incomeQuery = Pembayaran::where('status', Pembayaran::TERVERIFIKASI);
 
@@ -53,7 +55,8 @@ class LaporanService
 
                 $incomeQuery->whereHas('peminjaman', fn ($q) => $q->where('fasilitas_id', $facility->id));
 
-                $facility->pendapatan_terverifikasi = $incomeQuery->sum('nominal');
+                // Atribut terhitung (bukan kolom DB) untuk konsumsi view dashboard.
+                $facility->setAttribute('pendapatan_terverifikasi', $incomeQuery->sum('nominal'));
 
                 return $facility;
             });
