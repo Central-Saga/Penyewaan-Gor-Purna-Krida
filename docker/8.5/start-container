@@ -5,15 +5,15 @@ if [ "$SUPERVISOR_PHP_USER" != "root" ] && [ "$SUPERVISOR_PHP_USER" != "sail" ];
     exit 1
 fi
 
-if [ ! -z "$WWWUSER" ]; then
-    usermod -u $WWWUSER sail
+if [ ! -z "$WWWUSER" ] && [ "$WWWUSER" != "$(id -u sail 2>/dev/null)" ]; then
+    usermod -u $WWWUSER sail 2>/dev/null || true
 fi
 
 if [ ! -d /.composer ]; then
-    mkdir /.composer
+    mkdir -p /.composer 2>/dev/null || true
 fi
 
-chmod -R ugo+rw /.composer
+chmod -R ugo+rw /.composer 2>/dev/null || true
 
 if [ $# -gt 0 ]; then
     if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
