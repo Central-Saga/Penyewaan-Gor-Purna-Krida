@@ -37,7 +37,7 @@ return new class extends Migration
                 $table->string('status_aktif', 30)->nullable()->storedAs(
                     "case when status in ('menunggu_verifikasi','ditolak','disetujui','menunggu_pembayaran') then status else null end"
                 );
-                $table->unique(['fasilitas_id', 'tanggal', 'slot_sesi_id', 'status_aktif']);
+                $table->unique(['fasilitas_id', 'tanggal', 'slot_sesi_id', 'status_aktif'], 'peminjaman_slot_aktif_unique');
                 $table->index(['fasilitas_id', 'tanggal']);
                 $table->index(['user_id', 'status']);
             });
@@ -73,7 +73,7 @@ return new class extends Migration
                 $table->string('status_aktif', 30)->nullable()->storedAs(
                     "case when status in ('menunggu_pembayaran','menunggu_verifikasi','disetujui') then status else null end"
                 );
-                $table->unique(['fasilitas_id', 'tanggal', 'slot_sesi_id', 'status_aktif']);
+                $table->unique(['fasilitas_id', 'tanggal', 'slot_sesi_id', 'status_aktif'], 'peminjaman_slot_aktif_unique');
                 $table->index(['fasilitas_id', 'tanggal']);
                 $table->index(['user_id', 'status']);
             });
